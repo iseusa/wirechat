@@ -118,6 +118,7 @@ return [
     'allow_chats_search' => true,
     'allow_media_attachments' => true,
     'allow_file_attachments' => true,
+    'enabled_shift_enter' => true,
 
     /*
     |--------------------------------------------------------------------------
