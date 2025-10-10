@@ -80,8 +80,11 @@
 
                         @if ($conversation->isGroup())
                             {{-- Open group info button --}}
-                            <x-wirechat::actions.show-group-info :conversation="$conversation"
-                                widget="{{ $this->isWidget() }}">
+                            <x-wirechat::actions.show-group-info
+                                    :conversation="$conversation"
+                                    widget="{{ $this->isWidget() }}"
+                                    isDropdown="true"
+                            >
                                 <button class="w-full text-start">
                                     <x-wirechat::dropdown-link>
                                         {{ __('wirechat::chat.actions.open_group_info.label') }}

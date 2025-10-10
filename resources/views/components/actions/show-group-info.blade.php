@@ -1,6 +1,7 @@
 @props([
     'conversation' => null, //Should be conversation to more flexible when overriding
-    'widget' => false
+    'widget' => false,
+    'isDropdown' => false,
 ])
 
 

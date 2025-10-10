@@ -157,6 +157,9 @@ class Chat extends Component
      *  */
     public function setReply(string $id): void
     {
+        abort_unless(auth()->check(), 401);
+        abort_unless($this->canSendMessage(), 403);
+
         // descrypt
 
         $messageId = null;
@@ -319,6 +322,7 @@ class Chat extends Component
     {
 
         abort_unless(auth()->check(), 401);
+        abort_unless($this->canSendMessage(), 403);
 
         // rate limit
         $this->rateLimit();
@@ -517,6 +521,8 @@ class Chat extends Component
      **/
     public function deleteForEveryone(string $id): void
     {
+        abort_unless(auth()->check(), 401);
+        abort_unless($this->canDeleteMessage(), 403);
         // descrypt
         $messageId = null;
         try {
@@ -847,5 +853,15 @@ class Chat extends Component
     public function render()
     {
         return view('wirechat::livewire.chat.chat');
+    }
+
+    public function canSendMessage(): bool
+    {
+        return true;
+    }
+
+    public function canDeleteMessage(): bool
+    {
+        return true;
     }
 }

@@ -126,7 +126,9 @@
         {{-- ---------- --}}
         {{-- -Footer--- --}}
         {{-- ---------- --}}
+        @if ($this->canSendMessage())
         @include('wirechat::livewire.chat.partials.footer', [ 'conversation' => $conversation, 'authParticipant' => $authParticipant, 'media' => $media, 'files' => $files, 'replyMessage' => $replyMessage])
+        @endif
 
     </div>
 
