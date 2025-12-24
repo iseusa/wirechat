@@ -1,17 +1,21 @@
 <?php
 
-namespace Namu\WireChat\Livewire\Pages;
+namespace Wirechat\Wirechat\Livewire\Pages;
 
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
 
 class Chats extends Component
 {
+    use HasPanel;
+
     #[Title('Chats')]
     public function render()
     {
+
         return view('wirechat::livewire.pages.chats')
-            ->layout(config('wirechat.layout', 'wirechat::layouts.app'));
+            ->layout($this->panel()->getLayout());
 
     }
 }

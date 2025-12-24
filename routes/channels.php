@@ -1,8 +1,10 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
-use Namu\WireChat\Helpers\MorphClassResolver;
-use Namu\WireChat\Models\Conversation;
+use Wirechat\Wirechat\Helpers\MorphClassResolver;
+use Wirechat\Wirechat\Models\Conversation;
+use Wirechat\Wirechat\PanelRegistry;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,32 +17,70 @@ use Namu\WireChat\Models\Conversation;
 |
 */
 
-Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
+$panels = app(PanelRegistry::class)->all();
 
-    $conversation = Conversation::find($conversationId);
+if (empty($panels)) {
+    \Illuminate\Support\Facades\Log::warning('No panels registered in wirechatPanelRegistry for channels');
 
-    if ($conversation) {
-        // code...
-        if ($user->belongsToConversation($conversation)) {
-            return true; // Allow access to the channel
+    return;
+}
+
+foreach ($panels as $panel) {
+    $panelId = $panel->getId();
+    $guards = $panel->getGuards();
+    $middleware = $panel->getMiddleware();
+
+    // Conversation channel
+    Broadcast::channel("{$panelId}.conversation.{conversationId}", function ($user, $conversationId) use ($guards) {
+        // If $user is already authenticated by the application's broadcast auth, use it
+        if (! $user) {
+            // Fallback to checking each guard defined in the panel
+            $authenticatedUser = null;
+            foreach ($guards as $guard) {
+                if (Auth::guard($guard)->check()) {
+                    $authenticatedUser = Auth::guard($guard)->user();
+                    break;
+                }
+            }
+            $user = $authenticatedUser ?? null;
+
+            if (! $user) {
+                return false;
+            }
         }
-    }
 
-    return false; // Deny access to the channel
+        $conversation = Conversation::find($conversationId);
 
-},
-    [
-        'guards' => config('wirechat.routes.guards', ['web']),
-        'middleware' => config('wirechat.routes.middleware', ['web', 'auth']),
-    ]
-);
+        return $conversation && $user->belongsToConversation($conversation);
+    }, [
+        'guards' => $guards,
+        'middleware' => $middleware,
+    ]);
 
-Broadcast::channel('participant.{encodedType}.{id}', function ($user, $encodedType, $id) {
-    // Decode the encoded type to get the raw value.
-    $morphType = MorphClassResolver::decode($encodedType);
+    // Participant channel
+    Broadcast::channel("{$panelId}.participant.{encodedType}.{id}", function ($user, $encodedType, $id) use ($guards) {
+        // If $user is already authenticated by the application's broadcast auth, use it
+        if (! $user) {
+            // Fallback to checking each guard defined in the panel
+            $authenticatedUser = null;
+            foreach ($guards as $guard) {
+                if (Auth::guard($guard)->check()) {
+                    $authenticatedUser = Auth::guard($guard)->user();
+                    break;
+                }
+            }
+            $user = $authenticatedUser ?? null;
 
-    return $user->id == $id && $user->getMorphClass() == $morphType;
-}, [
-    'guards' => config('wirechat.routes.guards', ['web']),
-    'middleware' => config('wirechat.routes.middleware', ['web', 'auth']),
-]);
+            if (! $user) {
+                return false;
+            }
+        }
+
+        $morphType = MorphClassResolver::decode($encodedType);
+
+        return $user->id == $id && $user->getMorphClass() == $morphType;
+    }, [
+        'guards' => $guards,
+        'middleware' => $middleware,
+    ]);
+}

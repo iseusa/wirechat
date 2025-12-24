@@ -1,4 +1,4 @@
-@use('Namu\WireChat\Facades\WireChat')
+@use('Wirechat\Wirechat\Facades\Wirechat')
 
 
 @php
@@ -52,17 +52,17 @@
 ])
 >
 @if (!$belongsToAuth && $isGroup)
-<div    
+<div
     @class([
         'shrink-0 font-medium text-purple-500',
         // Hide avatar if the next message is from the same user
         'hidden' => $isSameAsPrevious
     ])>
-    {{ $message?->sendable?->display_name }}
+    {{ $message?->sendable?->wirechat_name }}
 </div>
 @endif
 
-<pre class="whitespace-pre-line tracking-normal text-sm md:text-base dark:text-white lg:tracking-normal"
+<pre class="whitespace-pre-line tracking-normal break-all text-sm md:text-base dark:text-white lg:tracking-normal"
     style="font-family: inherit;">
     {{str($message?->body)->sanitizeHtml()->toHtmlString()}}
 </pre>

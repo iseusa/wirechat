@@ -13,7 +13,7 @@
         <section >
 
             <h5 class="w-full text-start py-4 bg-[var(--wc-light-secondary)] dark:bg-[var(--wc-dark-secondary)] px-4">
-                
+
                 {{__('wirechat::chat.group.permissions.labels.members_can')}}:
             </h5>
 
@@ -40,17 +40,17 @@
 
                         <label class="inline-flex items-center cursor-pointer">
                             <input wire:model.live.debounce="allow_members_to_edit_group_info" type="checkbox"  class="sr-only peer">
-                            <div class="relative w-11 h-6  peer-focus:outline-hidden rounded-full peer 
+                            <div class="relative w-11 h-6  peer-focus:outline-hidden rounded-full peer
                             bg-[var(--wc-light-secondary)]  dark:bg-[var(--wc-dark-secondary)]
                             shadow-2xs
-                            peer-checked:border-[var(--wc-brand-primary)] 
-                            peer-checked:after:translate-x-full peer-checked:rtl:after:-translate-x-full 
+                            peer-checked:border-[var(--wc-brand-primary)]
+                            peer-checked:after:translate-x-full peer-checked:rtl:after:-translate-x-full
                             peer-checked:dark:border-[var(--wc-dark-primary)] peer-checked:border-[var(--wc-light-primary)]
-                            after:content-[''] after:absolute after:top-[2px] 
-                            after:start-[2px]  after:bg-white dark:after:bg-gray-100 after:shadow 
-                            peer-checked:after:bg-[var(--wc-brand-primary)] peer-checked:dark:after:bg-[var(--wc-brand-primary)] 
+                            after:content-[''] after:absolute after:top-[2px]
+                            after:start-[2px]  after:bg-white dark:after:bg-gray-100 after:shadow
+                            peer-checked:after:bg-[var(--wc-brand-primary)] peer-checked:dark:after:bg-[var(--wc-brand-primary)]
                             peer-checked:after:border-[var(--wc-brand-primary)] peer-checked:dark:after:border-[var(--wc-brand-primary)]
-                            dark:after:border-[var(--wc-dark-primary)] after:border-[var(--wc-light-primary)] after:border 
+                            dark:after:border-[var(--wc-dark-primary)] after:border-[var(--wc-light-primary)] after:border
                             after:rounded-full after:h-5 after:w-5 after:transition-all ease-in-out">
                      </div>
                         </label>
@@ -76,17 +76,17 @@
 
                         <label class="inline-flex items-center cursor-pointer">
                             <input wire:model.live.debounce="allow_members_to_send_messages" type="checkbox" class="sr-only peer">
-                            <div class="relative w-11 h-6  peer-focus:outline-hidden rounded-full peer 
+                            <div class="relative w-11 h-6  peer-focus:outline-hidden rounded-full peer
                             bg-[var(--wc-light-secondary)]  dark:bg-[var(--wc-dark-secondary)]
                             shadow-2xs
-                            peer-checked:border-[var(--wc-brand-primary)] 
-                            peer-checked:after:translate-x-full peer-checked:rtl:after:-translate-x-full 
+                            peer-checked:border-[var(--wc-brand-primary)]
+                            peer-checked:after:translate-x-full peer-checked:rtl:after:-translate-x-full
                             peer-checked:dark:border-[var(--wc-dark-primary)] peer-checked:border-[var(--wc-light-primary)]
-                            after:content-[''] after:absolute after:top-[2px] 
-                            after:start-[2px]  after:bg-white dark:after:bg-gray-100 after:shadow 
-                            peer-checked:after:bg-[var(--wc-brand-primary)] peer-checked:dark:after:bg-[var(--wc-brand-primary)] 
+                            after:content-[''] after:absolute after:top-[2px]
+                            after:start-[2px]  after:bg-white dark:after:bg-gray-100 after:shadow
+                            peer-checked:after:bg-[var(--wc-brand-primary)] peer-checked:dark:after:bg-[var(--wc-brand-primary)]
                             peer-checked:after:border-[var(--wc-brand-primary)] peer-checked:dark:after:border-[var(--wc-brand-primary)]
-                            dark:after:border-[var(--wc-dark-primary)] after:border-[var(--wc-light-primary)] after:border 
+                            dark:after:border-[var(--wc-dark-primary)] after:border-[var(--wc-light-primary)] after:border
                             after:rounded-full after:h-5 after:w-5 after:transition-all ease-in-out">
                      </div>
                         </label>
@@ -102,7 +102,7 @@
                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-6 h-6 text-gray-500 dark:text-white/90">
                             <path d="M5.25 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM2.25 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM18.75 7.5a.75.75 0 0 0-1.5 0v2.25H15a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H21a.75.75 0 0 0 0-1.5h-2.25V7.5Z" />
                           </svg>
-                          
+
                     </span>
 
                     <span class="w-full text-start">
@@ -115,21 +115,21 @@
 
                         <label class="inline-flex items-center cursor-pointer">
                             <input wire:model.live.debounce="allow_members_to_add_others" type="checkbox"  class="sr-only peer">
-                            <div class="relative w-11 h-6  peer-focus:outline-hidden rounded-full peer 
+                            <div class="relative w-11 h-6  peer-focus:outline-hidden rounded-full peer
                             bg-[var(--wc-light-secondary)]  dark:bg-[var(--wc-dark-secondary)]
                             shadow-2xs
-                            peer-checked:border-[var(--wc-brand-primary)] 
-                            peer-checked:after:translate-x-full peer-checked:rtl:after:-translate-x-full 
+                            peer-checked:border-[var(--wc-brand-primary)]
+                            peer-checked:after:translate-x-full peer-checked:rtl:after:-translate-x-full
                             peer-checked:dark:border-[var(--wc-dark-primary)] peer-checked:border-[var(--wc-light-primary)]
-                            after:content-[''] after:absolute after:top-[2px] 
-                            after:start-[2px]  after:bg-white dark:after:bg-gray-100 after:shadow 
-                            peer-checked:after:bg-[var(--wc-brand-primary)] peer-checked:dark:after:bg-[var(--wc-brand-primary)] 
+                            after:content-[''] after:absolute after:top-[2px]
+                            after:start-[2px]  after:bg-white dark:after:bg-gray-100 after:shadow
+                            peer-checked:after:bg-[var(--wc-brand-primary)] peer-checked:dark:after:bg-[var(--wc-brand-primary)]
                             peer-checked:after:border-[var(--wc-brand-primary)] peer-checked:dark:after:border-[var(--wc-brand-primary)]
-                            dark:after:border-[var(--wc-dark-primary)] after:border-[var(--wc-light-primary)] after:border 
+                            dark:after:border-[var(--wc-dark-primary)] after:border-[var(--wc-light-primary)] after:border
                             after:rounded-full after:h-5 after:w-5 after:transition-all ease-in-out">
                             </div>
-                        
-                        
+
+
                         </label>
 
                     </span>

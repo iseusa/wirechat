@@ -1,16 +1,17 @@
 <?php
 
-namespace Namu\WireChat\Livewire\Chat;
+namespace Wirechat\Wirechat\Livewire\Chat;
 
 use Livewire\Attributes\Locked;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Livewire\Chats\Chats;
-use Namu\WireChat\Livewire\Concerns\ModalComponent;
-use Namu\WireChat\Livewire\Concerns\Widget;
-use Namu\WireChat\Models\Conversation;
+use Wirechat\Wirechat\Livewire\Chats\Chats;
+use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
+use Wirechat\Wirechat\Livewire\Concerns\ModalComponent;
+use Wirechat\Wirechat\Livewire\Concerns\Widget;
+use Wirechat\Wirechat\Models\Conversation;
 
 class Info extends ModalComponent
 {
+    use HasPanel;
     use Widget;
 
     #[Locked]
@@ -39,7 +40,7 @@ class Info extends ModalComponent
         // Dispatach event instead if isWidget
         // handle widget termination
         $this->handleComponentTermination(
-            redirectRoute: route(WireChat::indexRouteName()),
+            redirectRoute: $this->panel()->chatsRoute(),
             events: [
                 'close-chat',
                 Chats::class => ['chat-deleted',  [$this->conversation->id]],
@@ -81,7 +82,7 @@ class Info extends ModalComponent
         // Pass data to the view
         return view('wirechat::livewire.chat.info', [
             'receiver' => $receiver,
-            'cover_url' => $receiver?->cover_url,
+            'wirechat_avatar_url' => $receiver?->wirechat_avatar_url,
         ]);
     }
 }

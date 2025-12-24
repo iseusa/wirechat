@@ -1,16 +1,16 @@
 <?php
 
-namespace Namu\WireChat\Livewire\Chats;
+namespace Wirechat\Wirechat\Livewire\Chats;
 
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Helpers\MorphClassResolver;
-use Namu\WireChat\Livewire\Concerns\Widget;
-use Namu\WireChat\Models\Conversation;
+use Wirechat\Wirechat\Helpers\MorphClassResolver;
+use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
+use Wirechat\Wirechat\Livewire\Concerns\Widget;
+use Wirechat\Wirechat\Models\Conversation;
 
 /**
  * Chats Component
@@ -21,7 +21,7 @@ use Namu\WireChat\Models\Conversation;
  */
 class Chats extends Component
 {
-    use Widget;
+    use HasPanel,Widget;
 
     /**
      * The search query.
@@ -41,16 +41,16 @@ class Chats extends Component
      * Features
      */
     #[Locked]
-    public bool $showNewChatModalButton;
+    public ?bool $createChatAction = null;
 
     #[Locked]
-    public bool $allowChatsSearch;
+    public ?bool $chatsSearch = null;
 
     #[Locked]
-    public bool $showHomeRouteButton;
+    public ?bool $redirectToHomeAction = null;
 
     #[Locked]
-    public ?string $title;
+    public ?string $heading = '';
 
     /**
      * Indicates if more conversations can be loaded.
@@ -82,13 +82,21 @@ class Chats extends Component
         $encodedType = MorphClassResolver::encode($user?->getMorphClass());
         $userId = $user?->getKey();
 
-        // dd($encodedType,$userId);
-        return [
+        $listeners = [
             'refresh' => '$refresh',
             'hardRefresh',
-            // Construct the channel name using the encoded type and user ID.
-            "echo-private:participant.{$encodedType}.{$userId},.Namu\\WireChat\\Events\\NotifyParticipant" => 'refreshComponent',
         ];
+
+        if ($this->panel() == null) {
+            \Illuminate\Support\Facades\Log::warning('Wirechat:No panels registered in Chat Component');
+        } else {
+            $panelId = $this->panel()->getId();
+            // Construct the channel name using the encoded type and user ID.
+            $channelName = "$panelId.participant.$encodedType.$userId";
+            $listeners["echo-private:{$channelName},.Wirechat\\Wirechat\\Events\\NotifyParticipant"] = 'refreshComponent';
+        }
+
+        return $listeners;
     }
 
     /**
@@ -279,7 +287,7 @@ class Chats extends Component
      */
     protected function applySearchConditions($query): \Illuminate\Database\Eloquent\Builder
     {
-        $searchableFields = WireChat::searchableFields();
+        $searchableFields = $this->panel()->getSearchableAttributes();
         $groupSearchableFields = ['name', 'description'];
         $columnCache = [];
 
@@ -333,21 +341,67 @@ class Chats extends Component
      *
      * @return void
      */
-    public function mount(
-        $showNewChatModalButton = null,
-        $allowChatsSearch = null,
-        $showHomeRouteButton = null,
-        ?string $title = null,
-    ) {
-        // If a value is passed, use it; otherwise fallback to WireChat defaults.
-        $this->showNewChatModalButton = isset($showNewChatModalButton) ? $showNewChatModalButton : WireChat::showNewChatModalButton();
-        $this->allowChatsSearch = isset($allowChatsSearch) ? $allowChatsSearch : WireChat::allowChatsSearch();
-        $this->showHomeRouteButton = isset($showHomeRouteButton) ? $showHomeRouteButton : ! $this->widget;
-        $this->title = isset($title) ? $title : __('wirechat::chats.labels.heading');
+    public function mount()
+    {
 
         abort_unless(auth()->check(), 401);
         $this->selectedConversationId = request()->conversation;
         $this->conversations = collect();
+
+    }
+
+    //    protected function initialize()
+    //    {
+    //        $this->heading = $this->panel()?->getHeading();
+    //        $this->createChatAction = $this->panel()?->hasCreateChatAction();
+    //        $this->chatsSearch = $this->panel()?->hasChatsSearch();
+    //        $this->redirectToHomeAction = $this->widget
+    //            ? false
+    //            : $this->panel()?->hasRedirectToHomeAction();
+    //    }
+
+    protected function initialize()
+    {
+        // Grab the original class‐level defaults
+        $defaults = get_class_vars(static::class);
+
+        //
+        // TITLE
+        //
+        // If current ≠ original (''), the user passed something:
+        //   • null → explicit “no heading”
+        //   • non‐empty string → custom heading
+        //
+
+        if ($this->heading !== $defaults['heading']) {
+            // leave $this->heading as-is (null or custom string)
+        } else {
+            // still '', so never set → pull from panel()
+
+            $this->heading = $this->panel()?->getHeading();
+        }
+        //  dd($this->heading , $defaults['heading']);
+
+        //
+        // BOOLEAN FLAGS
+        //
+        // Their default is null, so:
+        //   • null → never set → fallback to panel()
+        //   • true/false → explicit override
+        // todo: update action names to match panel names
+        if ($this->createChatAction === null) {
+            $this->createChatAction = $this->panel()?->hasCreateChatAction();
+        }
+
+        if ($this->chatsSearch === null) {
+            $this->chatsSearch = $this->panel()?->hasChatsSearch();
+        }
+
+        if ($this->redirectToHomeAction === null) {
+            $this->redirectToHomeAction = $this->widget
+                ? false
+                : $this->panel()?->hasRedirectToHomeAction();
+        }
     }
 
     /**
@@ -358,6 +412,8 @@ class Chats extends Component
     public function render()
     {
         $this->loadConversations();
+
+        $this->initialize();
 
         return view('wirechat::livewire.chats.chats');
     }

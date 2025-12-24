@@ -6,16 +6,16 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
-use Namu\WireChat\Enums\ConversationType;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Livewire\New\Group as NewGroup;
-use Namu\WireChat\Models\Attachment;
-use Namu\WireChat\Models\Conversation;
+use Wirechat\Wirechat\Enums\ConversationType;
+use Wirechat\Wirechat\Facades\Wirechat;
+use Wirechat\Wirechat\Livewire\New\Group as NewGroup;
+use Wirechat\Wirechat\Models\Attachment;
+use Wirechat\Wirechat\Models\Conversation;
 use Workbench\App\Models\User as ModelsUser;
 
 beforeEach(function () {
 
-    Storage::fake(WireChat::storageDisk());
+    Storage::fake(Wirechat::storage()->disk());
 });
 
 it('user must be authenticated', function () {
@@ -166,7 +166,7 @@ describe('Add members page', function () {
         $auth = ModelsUser::factory()->create();
         $request = Livewire::actingAs($auth)->test(NewGroup::class);
 
-        $maxGroupMembers = WireChat::maxGroupMembers();
+        $maxGroupMembers = testPanelProvider()->maxGroupMembers(1000);
 
         $request
             ->set('showAddMembers', true)
@@ -224,7 +224,8 @@ describe('Add members page', function () {
 
     test('show error if member limit is exceeded', function () {
 
-        Config::set('wirechat.max_group_members', 2);
+        testPanelProvider()->maxGroupMembers(2);
+
         $auth = ModelsUser::factory()->create();
         // create another user
         $member1 = ModelsUser::factory()->create(['name' => 'Micheal']);
@@ -245,7 +246,9 @@ describe('Add members page', function () {
 describe('Creteing group', function () {
 
     it('can create conversation  is validations pass', function () {
-        Config::set('wirechat.max_group_members', 3);
+
+        testPanelProvider()->maxGroupMembers(3);
+
         $auth = ModelsUser::factory()->create();
         // create another user
         $member1 = ModelsUser::factory()->create(['name' => 'Micheal']);
@@ -332,14 +335,14 @@ describe('Creteing group', function () {
 
         $attachment = Attachment::first();
         expect($attachment)->not->toBe(null);
-        Storage::disk(WireChat::storageDisk())->assertExists($attachment->file_path);
+        Storage::disk(Wirechat::storage()->disk())->assertExists($attachment->file_path);
 
         expect($conversation->group->cover)->not->toBe(null);
 
     });
 
     it('creates participants', function () {
-        Config::set('wirechat.max_group_members', 3);
+
         $auth = ModelsUser::factory()->create();
         // create another user
         $member1 = ModelsUser::factory()->create(['name' => 'Micheal']);
@@ -367,9 +370,10 @@ describe('Creteing group', function () {
         expect($conversation->participants->count())->toBe(4);
     });
 
-    it('dispataches Livewire events "closeWireChatModal" event after creating Group', function () {
+    it('dispataches Livewire events "closeWirechatModal" event after creating Group', function () {
 
-        Config::set('wirechat.max_group_members', 3);
+        testPanelProvider()->maxGroupMembers(3);
+
         $auth = ModelsUser::factory()->create();
         // create another user
         $member1 = ModelsUser::factory()->create(['name' => 'Micheal']);
@@ -392,13 +396,14 @@ describe('Creteing group', function () {
                 // create group
             ->call('create');
 
-        $request->assertDispatched('closeWireChatModal');
+        $request->assertDispatched('closeWirechatModal');
 
     });
 
     it('it redirects and does not dispatach Livewire events "open-chat" events after creating Group if is not Widget', function () {
 
-        Config::set('wirechat.max_group_members', 3);
+        testPanelProvider()->maxGroupMembers(3);
+
         $auth = ModelsUser::factory()->create();
         // create another user
         $member1 = ModelsUser::factory()->create(['name' => 'Micheal']);
@@ -423,14 +428,15 @@ describe('Creteing group', function () {
 
         $conversation = Conversation::withoutGlobalScopes()->first();
 
-        $request->assertRedirect(route(WireChat::viewRouteName(), $conversation->id))
+        $request->assertRedirect(testPanelProvider()->chatRoute($conversation->id))
             ->assertNotDispatched('open-chat');
 
     });
 
     it('it does not redirects but  dispataches Livewire events "open-chat" events after creating group if IS Widget', function () {
 
-        Config::set('wirechat.max_group_members', 3);
+        testPanelProvider()->maxGroupMembers(3);
+
         $auth = ModelsUser::factory()->create();
         // create another user
         $member1 = ModelsUser::factory()->create(['name' => 'Micheal']);
@@ -455,7 +461,7 @@ describe('Creteing group', function () {
 
         $conversation = Conversation::withoutGlobalScopes()->first();
 
-        $request->assertNoRedirect(route(WireChat::viewRouteName(), $conversation->id))
+        $request->assertNoRedirect()
             ->assertDispatched('open-chat');
 
     });

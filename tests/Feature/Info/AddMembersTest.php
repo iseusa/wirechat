@@ -1,9 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
-use Namu\WireChat\Livewire\Chat\Group\AddMembers;
-use Namu\WireChat\Models\Conversation;
+use Wirechat\Wirechat\Livewire\Chat\Group\AddMembers;
+use Wirechat\Wirechat\Models\Conversation;
 use Workbench\App\Models\User;
 
 test('user must be authenticated', function () {
@@ -45,7 +44,7 @@ describe('presence test', function () {
 
     test('Add Members title is set', function () {
 
-        Config::set('wirechat.max_group_members', 1000);
+        testPanelProvider()->maxGroupMembers(1000);
 
         $auth = User::factory()->create();
         $conversation = $auth->createGroup('My Group');
@@ -104,7 +103,8 @@ describe('actions test', function () {
 
     test('it updated number when new members are added or removed', function () {
 
-        Config::set('wirechat.max_group_members', 1000);
+        testPanelProvider()->maxGroupMembers(1000);
+
         $auth = User::factory()->create();
         $conversation = $auth->createGroup('My Group');
 
@@ -154,7 +154,7 @@ describe('actions test', function () {
                 // first add member
             ->call('toggleMember', $user->id, $user->getMorphClass())
             ->assertDontSee('Micheal')
-            ->assertStatus(403, $user->display_name.' is already a member');
+            ->assertStatus(403, $user->wirechat_name.' is already a member');
     });
 
     test('it aborts if admin tries to add a member who exited the group', function () {
@@ -172,7 +172,7 @@ describe('actions test', function () {
 
         $request = Livewire::actingAs($randomUser)->test(AddMembers::class, ['conversation' => $conversation]);
         $request->call('toggleMember', $userTobeRemoved->id, $userTobeRemoved->getMorphClass())
-            ->assertStatus(403, "Cannot add {$participant->participantable->display_name} because they left the group");
+            ->assertStatus(403, "Cannot add {$participant->participantable->wirechat_name} because they left the group");
 
     });
 
@@ -192,7 +192,7 @@ describe('actions test', function () {
 
         $request = Livewire::actingAs($randomUser)->test(AddMembers::class, ['conversation' => $conversation]);
         $request->call('toggleMember', $userTobeRemoved->id, $userTobeRemoved->getMorphClass())
-            ->assertStatus(403, "Cannot add {$participant->participantable->display_name} because they were removed from the group by an Admin.");
+            ->assertStatus(403, "Cannot add {$participant->participantable->wirechat_name} because they were removed from the group by an Admin.");
 
     });
 
@@ -274,7 +274,7 @@ describe('actions test', function () {
 
     });
 
-    test('it dispatches closeWireChatModal event after saving ', function () {
+    test('it dispatches closeWirechatModal event after saving ', function () {
         $auth = User::factory()->create();
         $conversation = $auth->createGroup('My Group');
 
@@ -287,7 +287,7 @@ describe('actions test', function () {
             ->call('toggleMember', $user->id, $user->getMorphClass())
             ->call('save');
 
-        $request->assertDispatched('closeWireChatModal');
+        $request->assertDispatched('closeWirechatModal');
 
     });
 

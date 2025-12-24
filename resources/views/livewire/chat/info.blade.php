@@ -10,22 +10,22 @@
         <h3>{{ __('wirechat::chat.info.heading.label') }}</h3>
     </section>
     {{-- Details --}}
-    
+
     <header>
- 
+
             <div class="flex  flex-col items-center gap-5 ">
 
                 <div class="mx-auto items-center justify-center grid">
 
-                    <a href="{{ $receiver?->profile_url }}">
-                        <x-wirechat::avatar :src="$cover_url" class=" h-32 w-32 mx-auto" />
+                    <a href="{{ $receiver?->wirechat_profile_url }}">
+                        <x-wirechat::avatar :src="$wirechat_avatar_url" class=" h-32 w-32 mx-auto" />
                     </a>
                 </div>
 
                 <div class=" grid  ">
 
-                    <a class="px-8 py-5 " @dusk="receiver_name" href="{{ $receiver?->profile_url }}">
-                        <h5 class="text-2xl">{{ $receiver?->display_name }}</h5>
+                    <a class="px-8 py-5 " @dusk="receiver_name" href="{{ $receiver?->wirechat_profile_url }}">
+                        <h5 class="text-2xl">{{ $receiver?->wirechat_name }}</h5>
                     </a>
                 </div>
 
@@ -37,7 +37,7 @@
 
     <x-wirechat::divider />
 
-   
+
     {{-- Footer section --}}
     <section class="flex flex-col justify-start w-full">
 

@@ -4,8 +4,8 @@
 
 use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Livewire\New\Chat as NewChat;
+use Wirechat\Wirechat\Facades\Wirechat;
+use Wirechat\Wirechat\Livewire\New\Chat as NewChat;
 use Workbench\App\Models\User as ModelsUser;
 
 it('user must be authenticated', function () {
@@ -66,6 +66,7 @@ test('close_modal_button_is_set_correctly', function () {
 });
 
 it('shows New group if allowed', function () {
+    testPanelProvider()->createChatAction()->createGroupAction();
 
     Config::set('wirechat.show_new_group_modal_button', true);
     $auth = ModelsUser::factory()->create();
@@ -79,7 +80,7 @@ it('shows New group if allowed', function () {
 
 it('doesnt shows New group if not allowed', function () {
 
-    Config::set('wirechat.show_new_group_modal_button', false);
+    testPanelProvider()->createGroupAction(false);
     $auth = ModelsUser::factory()->create();
 
     $request = Livewire::actingAs($auth)->test(NewChat::class);
@@ -90,6 +91,7 @@ it('doesnt shows New group if not allowed', function () {
 });
 
 test('it shows new group button if user canCreateNewGroups==TRUE (email is verified)', function () {
+    testPanelProvider()->createChatAction()->createGroupAction();
 
     $auth = ModelsUser::factory()->create(['email_verified_at' => now()]);
     $request = Livewire::actingAs($auth)->test(NewChat::class);
@@ -131,7 +133,7 @@ describe('Creating conversation', function () {
 
     });
 
-    test('it dispataches Livewire events "closeWireChatModal" after creating conversation', function () {
+    test('it dispataches Livewire events "closeWirechatModal" after creating conversation', function () {
 
         $auth = ModelsUser::factory()->create();
 
@@ -147,7 +149,7 @@ describe('Creating conversation', function () {
         $request->call('createConversation', $otherUser->id, ModelsUser::class);
 
         // assert redirect
-        $request->assertDispatched('closeWireChatModal');
+        $request->assertDispatched('closeWirechatModal');
 
     });
 
@@ -170,7 +172,7 @@ describe('Creating conversation', function () {
 
         // assert redirect
         $request
-            ->assertRedirect(route(WireChat::viewRouteName(), $conversation->id))
+            ->assertRedirect(testPanelProvider()->chatRoute($conversation->id))
             ->assertNotDispatched('open-chat');
 
     });
@@ -193,8 +195,9 @@ describe('Creating conversation', function () {
         $conversation = $auth->conversations()->first();
 
         // assert redirect
+
         $request
-            ->assertNoRedirect(route(WireChat::viewRouteName(), $conversation->id))
+            ->assertNoRedirect()
             ->assertDispatched('open-chat');
 
     });

@@ -1,15 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
-use Namu\WireChat\Enums\Actions;
-use Namu\WireChat\Enums\ConversationType;
-use Namu\WireChat\Enums\ParticipantRole;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Livewire\Chat\Group\Members;
-use Namu\WireChat\Models\Action;
-use Namu\WireChat\Models\Conversation;
-use Namu\WireChat\Models\Participant;
+use Wirechat\Wirechat\Enums\Actions;
+use Wirechat\Wirechat\Enums\ConversationType;
+use Wirechat\Wirechat\Enums\ParticipantRole;
+use Wirechat\Wirechat\Livewire\Chat\Group\Members;
+use Wirechat\Wirechat\Models\Action;
+use Wirechat\Wirechat\Models\Conversation;
+use Wirechat\Wirechat\Models\Participant;
 use Workbench\App\Models\User;
 
 test('user must be authenticated', function () {
@@ -42,7 +40,7 @@ describe('presence test', function () {
 
     test(' Members title is set', function () {
 
-        Config::set('wirechat.max_group_members', 1000);
+        testPanelProvider()->maxGroupMembers(1000);
 
         $auth = User::factory()->create();
         $conversation = $auth->createGroup('My Group');
@@ -56,7 +54,7 @@ describe('presence test', function () {
 
     test('close_modal_button_is_set_correctly', function () {
 
-        Config::set('wirechat.max_group_members', 1000);
+        testPanelProvider()->maxGroupMembers(1000);
 
         $auth = User::factory()->create();
         $conversation = $auth->createGroup('My Group');
@@ -452,7 +450,7 @@ describe('actions test', function () {
     });
 
     describe('sendMessage: ', function () {
-        test('it redirects to chat route and does not dispatch "closeWireChatModal" & "open-chat"  & "close-chat" event when componnet is not Wdiget route after creating conversation ', function () {
+        test('it redirects to chat route and does not dispatch "closeWirechatModal" & "open-chat"  & "close-chat" event when componnet is not Wdiget route after creating conversation ', function () {
             $auth = User::factory()->create();
             $conversation = $auth->createGroup('My Group');
 
@@ -463,13 +461,13 @@ describe('actions test', function () {
             $request = Livewire::actingAs($auth)->test(Members::class, ['conversation' => $conversation]);
             $request
                 ->call('sendMessage', $participant->id)
-                ->assertRedirect(route(WireChat::viewRouteName(), 2))
+                ->assertRedirect(testPanelProvider()->chatRoute(2))
                 ->assertNotDispatched('close-chat')
-                ->assertNotDispatched('closeWireChatModal')
+                ->assertNotDispatched('closeWirechatModal')
                 ->assertNotDispatched('open-chat');
         });
 
-        test('it dispatches "closeWireChatModal" & "open-chat"  & "close-chat" event and does not redirects to chat route and does not when componnet  is Wdiget route after creating conversation ', function () {
+        test('it dispatches "closeWirechatModal" & "open-chat"  & "close-chat" event and does not redirects to chat route and does not when componnet  is Wdiget route after creating conversation ', function () {
             $auth = User::factory()->create();
             $conversation = $auth->createGroup('My Group');
 
@@ -480,9 +478,9 @@ describe('actions test', function () {
             $request = Livewire::actingAs($auth)->test(Members::class, ['conversation' => $conversation, 'widget' => true]);
             $request
                 ->call('sendMessage', $participant->id)
-                ->assertNoRedirect(route(WireChat::viewRouteName(), 2))
+                ->assertNoRedirect()
                 ->assertDispatched('open-chat')
-                ->assertDispatched('closeWireChatModal')
+                ->assertDispatched('closeWirechatModal')
                 ->assertNotDispatched('close-chat');
 
         });
@@ -731,13 +729,13 @@ describe('actions test', function () {
         $request = Livewire::actingAs($auth)->test(Members::class, ['conversation' => $conversation]);
 
         // assert
-        $request->assertSee($participant->display_name);
+        $request->assertSee($participant->wirechat_name);
 
         // action
         $request->call('removeFromGroup', $participant->id);
 
         // assert after
-        $request->assertDontSee($participant->display_name);
+        $request->assertDontSee($participant->wirechat_name);
 
     });
 

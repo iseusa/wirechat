@@ -1,17 +1,18 @@
 <?php
 
-namespace Namu\WireChat\Livewire\Chat\Group;
+namespace Wirechat\Wirechat\Livewire\Chat\Group;
 
 use Livewire\Attributes\Locked;
 // use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Livewire\Concerns\ModalComponent;
-use Namu\WireChat\Models\Conversation;
-use Namu\WireChat\Models\Participant;
+use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
+use Wirechat\Wirechat\Livewire\Concerns\ModalComponent;
+use Wirechat\Wirechat\Models\Conversation;
+use Wirechat\Wirechat\Models\Participant;
 
 class Permissions extends ModalComponent
 {
+    use HasPanel;
     use WithFileUploads;
 
     #[Locked]
@@ -86,6 +87,6 @@ class Permissions extends ModalComponent
     {
 
         // Pass data to the view
-        return view('wirechat::livewire.chat.group.permissions', ['maxGroupMembers' => WireChat::maxGroupMembers()]);
+        return view('wirechat::livewire.chat.group.permissions', ['maxGroupMembers' => $this->panel()->getMaxGroupMembers()]);
     }
 }

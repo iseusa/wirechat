@@ -3,7 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Namu\WireChat\Models\Action;
+use Wirechat\Wirechat\Facades\Wirechat;
+use Wirechat\Wirechat\Models\Action;
 
 return new class extends Migration
 {
@@ -12,10 +13,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-
+        $usesUuid = Wirechat::usesUuid();
         Schema::create((new Action)->getTable(), function (Blueprint $table) {
             $table->id();
 
+            // Always string for UUID or integer-as-string
             // Actionable (the entity being acted upon)
             $table->unsignedBigInteger('actionable_id');
             $table->string('actionable_type');

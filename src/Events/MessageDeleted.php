@@ -1,25 +1,28 @@
 <?php
 
-namespace Namu\WireChat\Events;
+namespace Wirechat\Wirechat\Events;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Models\Message;
+use Wirechat\Wirechat\Models\Message;
+use Wirechat\Wirechat\Traits\InteractsWithPanel;
 
 class MessageDeleted implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
+    use InteractsWithPanel;
 
     public $message;
     // public $receiver;
 
-    public function __construct(Message $message)
+    public function __construct(Message $message, ?string $panel = null)
     {
         $this->message = $message->load([]);
+        $this->resolvePanel($panel);
+
     }
 
     /**
@@ -29,9 +32,14 @@ class MessageDeleted implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('conversation.'.$this->message->conversation_id),
-        ];
+        $channels = [];
+
+        $panelId = $this->getPanel()->getId();
+        $channels[] = "$panelId.conversation.{$this->message->conversation_id}";
+
+        return array_map(function ($channelName) {
+            return new PrivateChannel($channelName);
+        }, $channels);
     }
 
     /**
@@ -39,7 +47,7 @@ class MessageDeleted implements ShouldBroadcastNow
      */
     public function broadcastQueue(): string
     {
-        return WireChat::notificationsQueue();
+        return $this->getPanel()->getMessagesQueue();
     }
 
     /**

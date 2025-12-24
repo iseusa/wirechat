@@ -1,6 +1,5 @@
 <div class="h-full ">
-
-    @assets
+    @script
         <script>
             window.ChatWidget = () => {
                 return {
@@ -172,7 +171,7 @@
                 };
             }
         </script>
-    @endassets
+    @endscript
 
 
     <div
@@ -184,9 +183,10 @@
 
         }
     }"
+
      class ='w-full h-full bg-[var(--wc-light-primary)] dark:bg-[var(--wc-dark-primary)] border border-[var(--wc-light-secondary)] dark:border-[var(--wc-dark-secondary)] flex overflow-hidden rounded-lg'>
       <div :class="chatIsOpen && 'hidden md:grid'" class="relative  w-full h-full sm:border-r border-[var(--wc-light-border)] dark:border-[var(--wc-dark-border)]    md:w-[360px] lg:w-[400px] xl:w-[450px] shrink-0 overflow-y-auto  ">
-          <livewire:wirechat.chats :widget="true" />
+          <livewire:wirechat.chats :widget="true" :panel="$this->panel" />
       </div>
       <main
            x-data="ChatWidget()"
@@ -207,9 +207,12 @@
                 class="fixed inset-0" id="chatwidget-container"
                 aria-modal="true">
                 @forelse($widgetComponents as $id => $component)
-                    <div  x-show.immediate="activeWidgetComponent == '{{ $id }}'" x-ref="{{ $id }}"
-                         wire:key="key-{{$id }}" class="h-full">
-                        @livewire($component['name'], ['conversation'=> $component['conversation'] ,'widget'=>true], key($id))
+                    <div x-show.immediate="activeWidgetComponent == @js($id)"
+                         x-ref="@js($id)"
+                         wire:key="key-{{$id }}"
+                         class="h-full">
+
+                    @livewire($component['name'], ['conversation'=> $component['conversation'] ,'widget'=>true,'panel'=>$this->panel], key($id))
                     </div>
                 @empty
                 @endforelse

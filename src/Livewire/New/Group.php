@@ -1,16 +1,17 @@
 <?php
 
-namespace Namu\WireChat\Livewire\New;
+namespace Wirechat\Wirechat\Livewire\New;
 
 use Livewire\Attributes\Validate;
 use Livewire\WithFileUploads;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Livewire\Concerns\ModalComponent;
-use Namu\WireChat\Livewire\Concerns\Widget;
-use Namu\WireChat\Livewire\Widgets\WireChat as WidgetsWireChat;
+use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
+use Wirechat\Wirechat\Livewire\Concerns\ModalComponent;
+use Wirechat\Wirechat\Livewire\Concerns\Widget;
+use Wirechat\Wirechat\Livewire\Widgets\Wirechat as WidgetsWirechat;
 
 class Group extends ModalComponent
 {
+    use HasPanel;
     use Widget;
     use WithFileUploads;
 
@@ -78,7 +79,8 @@ class Group extends ModalComponent
             $this->users = [];
         } else {
 
-            $this->users = auth()->user()->searchChatables($this->search);
+            $this->users = $this->panel()->searchUsers($this->search)->resolve();
+
         }
     }
 
@@ -119,12 +121,12 @@ class Group extends ModalComponent
             if ($this->selectedMembers->contains(fn ($member) => $member->id == $model->id && get_class($member) == get_class($model))) {
                 // Remove member if they are already selected
                 $this->selectedMembers = $this->selectedMembers->reject(function ($member) use ($id, $class) {
-                    return $member->id == $id && get_class($member) == $class;
+                    return $member->id == $id && $member->getMorphClass() == $class;
                 });
             } else {
 
                 // validte members count
-                if (count($this->selectedMembers) >= WireChat::maxGroupMembers()) {
+                if (count($this->selectedMembers) >= $this->panel()->getMaxGroupMembers()) {
                     return $this->dispatch('show-member-limit-error');
                 }
 
@@ -169,13 +171,13 @@ class Group extends ModalComponent
         // close dialog
         // The froce close is importnat because it will close all dialogs including parents or children
         $this->forceClose();
-        $this->closeWireChatModal();
+        $this->closeWirechatModal();
 
         // redirect to conversation
         $this->handleComponentTermination(
-            redirectRoute: route(WireChat::viewRouteName(), [$conversation->id]),
+            redirectRoute: $this->panel()->chatRoute($conversation->id),
             events: [
-                WidgetsWireChat::class => ['open-chat',  ['conversation' => $conversation->id]],
+                WidgetsWirechat::class => ['open-chat',  ['conversation' => $conversation->id]],
             ]
         );
 
@@ -193,6 +195,6 @@ class Group extends ModalComponent
     public function render()
     {
 
-        return view('wirechat::livewire.new.group', ['maxGroupMembers' => WireChat::maxGroupMembers()]);
+        return view('wirechat::livewire.new.group', ['maxGroupMembers' => $this->panel()->getMaxGroupMembers()]);
     }
 }

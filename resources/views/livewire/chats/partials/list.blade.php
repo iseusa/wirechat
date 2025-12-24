@@ -1,7 +1,6 @@
+@use('Wirechat\Wirechat\Facades\Wirechat')
 
-@use('Namu\WireChat\Facades\WireChat')
-
-<ul wire:loading.delay.long.remove wire:target="search" class="p-2 grid w-full spacey-y-2">
+<ul wire:loading.delay.long.remove wire:target="search" class="p-2 grid w-full space-y-2">
     @foreach ($conversations as $key=> $conversation)
     @php
     //$receiver =$conversation->getReceiver();
@@ -38,28 +37,28 @@
                 this.showUnreadStatus= false;
             }
     }
-    }"  
+    }"
 
-    id="conversation-{{ $conversation->id }}" 
+    id="conversation-{{ $conversation->id }}"
         wire:key="conversation-em-{{ $conversation->id }}-{{ $conversation->updated_at->timestamp }}"
         x-on:chat-opened.window="handleChatOpened($event)"
         x-on:chat-closed.window="handleChatClosed($event)">
-        <a @if ($widget) tabindex="0" 
-        role="button" 
+        <a @if ($widget) tabindex="0"
+        role="button"
         dusk="openChatWidgetButton"
         @click="$dispatch('open-chat',{conversation:@js($conversation->id)})"
         @keydown.enter="$dispatch('open-chat',{conversation:@js($conversation->id)})"
         @else
-        wire:navigate href="{{ route(WireChat::viewRouteName(), $conversation->id) }}" @endif
+        wire:navigate href="{{ $this->panel()->chatRoute($conversation->id)}}" @endif
             @style(['border-color:var(--wc-brand-primary)' => $selectedConversationId == $conversation?->id])
-            class="py-3 flex gap-4 dark:hover:bg-[var(--wc-dark-secondary)]  hover:bg-[var(--wc-light-secondary)]  rounded-xs transition-colors duration-150  relative w-full cursor-pointer px-2"
+            class="py-3 flex gap-4  dark:hover:bg-[var(--wc-dark-secondary)]  hover:bg-[var(--wc-light-secondary)]  rounded-xs transition-colors duration-150  relative w-full cursor-pointer px-2"
             :class="$wire.selectedConversationId == conversationID &&
                 'dark:bg-[var(--wc-dark-secondary)] bg-[var(--wc-light-secondary)] border-r-4  border-opacity-20 border-[var(--wc-brand-primary)]'">
 
             <div class="shrink-0">
-                <x-wirechat::avatar disappearing="{{ $conversation->hasDisappearingTurnedOn() }}"
+                <x-wirechat::avatar key="chat-list-conversation-{{$key}}" wire:key="chatslist-key-{{$key}}" disappearing="{{ $conversation->hasDisappearingTurnedOn() }}"
                     group="{{ $conversation->isGroup() }}"
-                    :src="$group ? $group?->cover_url : $receiver?->cover_url ?? null" class="w-12 h-12" />
+                    :src="$group ? $group?->cover_url : $receiver?->wirechat_avatar_url ?? null" class="w-12 h-12" />
             </div>
 
             <aside class="grid  grid-cols-12 w-full">

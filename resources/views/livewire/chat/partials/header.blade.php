@@ -1,11 +1,11 @@
-@use('Namu\WireChat\Facades\WireChat')
+@use('Wirechat\Wirechat\Facades\Wirechat')
 
 @php
     $group = $conversation->group;
 @endphp
 
 <header
-    class="w-full  sticky inset-x-0 flex pb-[5px] pt-[7px] top-0 z-10 dark:bg-[var(--wc-dark-secondary)] bg-[var(--wc-light-secondary)] border-[var(--wc-light-primary)] dark:border-[var(--wc-dark-secondary)]   border-b">
+    class="w-full   sticky inset-x-0 flex pb-[5px] pt-[7px] top-0 z-10 bg-[var(--wc-light-primary)] dark:bg-[var(--wc-dark-secondary)]  border-[var(--wc-light-border)] dark:border-[var(--wc-dark-secondary)]   border-b">
 
     <div class="  flex  w-full items-center   px-2 py-2   lg:px-4 gap-2 md:gap-5 ">
 
@@ -13,7 +13,7 @@
         <a @if ($this->isWidget()) @click="$dispatch('close-chat',{conversation: {{json_encode($conversation->id)}} })"
             dusk="return_to_home_button_dispatch"
         @else
-            href="{{ route(WireChat::indexRouteName(), $conversation->id) }}"
+            href="{{ $this->panel()->chatsRoute() }}"
             dusk="return_to_home_button_link" @endif
             @class([
                 'shrink-0  cursor-pointer dark:text-white',
@@ -48,10 +48,10 @@
                         widget="{{ $this->isWidget() }}">
                         <div class="flex items-center gap-2 cursor-pointer ">
                             <x-wirechat::avatar disappearing="{{ $conversation->hasDisappearingTurnedOn() }}"
-                                :group="false" :src="$receiver?->cover_url ?? null"
+                                :group="false" :src="$receiver?->wirechat_avatar_url ?? null"
                                 class="h-8 w-8 lg:w-10 lg:h-10 " />
                             <h6 class="font-bold text-base text-gray-800 dark:text-white w-full truncate">
-                                {{ $receiver?->display_name }} @if ($conversation->isSelfConversation())
+                                {{ $receiver?->wirechat_name }} @if ($conversation->isSelfConversation())
                                     ({{ __('wirechat::chat.labels.you') }})
                                 @endif
                             </h6>
@@ -109,7 +109,7 @@
                                 @lang('wirechat::chat.actions.close_chat.label')
                             </x-wirechat::dropdown-link>
                         @else
-                            <x-wirechat::dropdown-link href="{{ route(WireChat::indexRouteName()) }}" class="shrink-0">
+                            <x-wirechat::dropdown-link href="{{ $this->panel()->chatsRoute()  }}" class="shrink-0">
                                 @lang('wirechat::chat.actions.close_chat.label')
                             </x-wirechat::dropdown-link>
                         @endif
@@ -117,15 +117,18 @@
 
                         {{-- Only show delete and clear if conversation is NOT group --}}
                         @if (!$conversation->isGroup())
-                            <button class="w-full" wire:click="clearConversation"
+                            @if($this->panel()->hasClearChatAction())
+                            <button dusk="clear-chat-action" class="w-full" wire:click="clearConversation"
                                 wire:confirm="{{ __('wirechat::chat.actions.clear_chat.confirmation_message') }}">
 
                                 <x-wirechat::dropdown-link>
                                     @lang('wirechat::chat.actions.clear_chat.label')
                                 </x-wirechat::dropdown-link>
                             </button>
+                            @endif
 
-                            <button wire:click="deleteConversation"
+                           @if($this->panel()->hasDeleteChatAction())
+                            <button dusk="delete-chat-action" wire:click="deleteConversation"
                                 wire:confirm="{{ __('wirechat::chat.actions.delete_chat.confirmation_message') }}"
                                 class="w-full text-start">
 
@@ -134,6 +137,8 @@
                                 </x-wirechat::dropdown-link>
 
                             </button>
+                           @endif
+
                         @endif
 
 

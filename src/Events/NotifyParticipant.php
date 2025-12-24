@@ -1,6 +1,6 @@
 <?php
 
-namespace Namu\WireChat\Events;
+namespace Wirechat\Wirechat\Events;
 
 use Carbon\Carbon;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -9,36 +9,33 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Helpers\MorphClassResolver;
-use Namu\WireChat\Http\Resources\MessageResource;
-use Namu\WireChat\Models\Message;
-use Namu\WireChat\Models\Participant;
+use Wirechat\Wirechat\Helpers\MorphClassResolver;
+use Wirechat\Wirechat\Http\Resources\MessageResource;
+use Wirechat\Wirechat\Models\Message;
+use Wirechat\Wirechat\Models\Participant;
+use Wirechat\Wirechat\Traits\InteractsWithPanel;
 
 class NotifyParticipant implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
+    use InteractsWithPanel;
 
     public $participantType;
 
     public $participantId;
 
-    public function __construct(public Participant|Model $participant, public Message $message)
+    public function __construct(public Participant|Model $participant, public Message $message, ?string $panel = null)
     {
-
         if ($participant instanceof Participant) {
             $this->participantType = $participant->participantable_type;
             $this->participantId = $participant->participantable_id;
         } else {
-
             $this->participantType = $participant->getMorphClass();
             $this->participantId = $participant->getKey();
         }
 
-        //  $this->dontBroadcastToCurrentUser();
-
+        $this->resolvePanel($panel);
         $message->load('conversation.group', 'sendable', 'attachment');
-
     }
 
     /**
@@ -46,7 +43,7 @@ class NotifyParticipant implements ShouldBroadcastNow
      */
     public function broadcastQueue(): string
     {
-        return $this->message->conversation->isPrivate() ? WireChat::messagesQueue() : WireChat::notificationsQueue();
+        return $this->message->conversation->isPrivate() ? $this->getPanel()->getMessagesQueue() : $this->getPanel()->getEventsQueue();
     }
 
     public function broadcastWhen(): bool
@@ -60,17 +57,22 @@ class NotifyParticipant implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         $encodedType = MorphClassResolver::encode($this->participantType);
+        $channels = [];
 
-        return [
-            new PrivateChannel('participant.'.$encodedType.'.'.$this->participantId),
-        ];
+        $panelId = $this->getPanel()->getId();
+        $channels[] = "$panelId.participant.$encodedType.$this->participantId";
+
+        return array_map(function ($channelName) {
+            return new PrivateChannel($channelName);
+        }, $channels);
     }
 
     public function broadcastWith(): array
     {
+
         return [
             'message' => new MessageResource($this->message),
-            'redirect_url' => route(WireChat::viewRouteName(), [$this->message->conversation_id]),
+            'redirect_url' => $this->getPanel()->chatRoute($this->message->conversation_id),
         ];
     }
 }

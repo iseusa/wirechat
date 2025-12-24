@@ -1,20 +1,20 @@
 <?php
 
-namespace Namu\WireChat\Livewire\Chat\Group;
+namespace Wirechat\Wirechat\Livewire\Chat\Group;
 
 use App\Models\User;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 // use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Livewire\Chat\Info;
-use Namu\WireChat\Livewire\Concerns\ModalComponent;
-use Namu\WireChat\Models\Conversation;
-use Namu\WireChat\Models\Participant;
+use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
+use Wirechat\Wirechat\Livewire\Concerns\ModalComponent;
+use Wirechat\Wirechat\Models\Conversation;
+use Wirechat\Wirechat\Models\Participant;
 
 class AddMembers extends ModalComponent
 {
+    use HasPanel;
     use WithFileUploads;
 
     #[Locked]
@@ -73,7 +73,26 @@ class AddMembers extends ModalComponent
             $this->users = null;
         } else {
 
-            $this->users = auth()->user()->searchChatables($this->search);
+            /**
+             * Update the users list based on the search term.
+             *
+             * Maps the panel search results to an array with:
+             * - id, type, wirechat_name, wirechat_avatar_url
+             * - belongsToConversation flag for the current conversation
+             */
+            $this->users = collect($this->panel()->searchUsers($this->search)->collection)
+                ->map(function ($resource) {
+                    $model = $resource->resource; // underlying model
+
+                    return [
+                        'id' => $model->id,
+                        'type' => $model->getMorphClass(),
+                        'wirechat_name' => $model->wirechat_name,
+                        'wirechat_avatar_url' => $model->wirechat_avatar_url,
+                        'belongsToConversation' => $model->belongsToConversation($this->conversation),
+                    ];
+                });
+
         }
     }
 
@@ -85,7 +104,7 @@ class AddMembers extends ModalComponent
         if ($model) {
 
             // abort if member already belong to conversation
-            abort_if($model->belongsToConversation($this->conversation), 403, $model->display_name.' Is already a member');
+            abort_if($model->belongsToConversation($this->conversation), 403, $model->wirechat_name.' Is already a member');
 
             if ($this->selectedMembers->contains(fn ($member) => $member->id == $model->id && get_class($member) == get_class($model))) {
                 // Remove member if they are already selected
@@ -95,21 +114,21 @@ class AddMembers extends ModalComponent
             } else {
 
                 // validate members count
-                if ($this->newTotalCount >= WireChat::maxGroupMembers()) {
+                if ($this->newTotalCount >= $this->panel()->getMaxGroupMembers()) {
                     return $this->dispatch('show-member-limit-error');
                 }
 
                 $participant = $this->conversation->participant($model, withoutGlobalScopes: true);
 
                 // abort if member already exited group
-                abort_if($participant?->hasExited(), 403, 'Cannot add '.$model->display_name.' because they left the group');
+                abort_if($participant?->hasExited(), 403, 'Cannot add '.$model->wirechat_name.' because they left the group');
 
                 // check if is removed - if true then
                 // abort if non admin member tries to add a participant previously removed by admin
                 if ($participant?->isRemovedByAdmin()) {
                     $authParticipant = $this->conversation->participant(auth()->user());
 
-                    abort_unless($authParticipant?->isAdmin(), 403, 'Cannot add '.$model->display_name.' because they were removed from the group by an Admin.');
+                    abort_unless($authParticipant?->isAdmin(), 403, 'Cannot add '.$model->wirechat_name.' because they were removed from the group by an Admin.');
 
                 }
 
@@ -139,9 +158,9 @@ class AddMembers extends ModalComponent
             }
         }
 
-        $this->closeWireChatModal();
+        $this->closeWirechatModal();
 
-        $this->dispatch('participantsCountUpdated', $this->newTotalCount)->to(Info::class);
+        $this->dispatch('participantsCountUpdated', $this->newTotalCount)->to(\Wirechat\Wirechat\Livewire\Chat\Group\Info::class);
     }
 
     public function mount()
@@ -166,6 +185,6 @@ class AddMembers extends ModalComponent
     {
 
         // Pass data to the view
-        return view('wirechat::livewire.chat.group.add-members', ['maxGroupMembers' => WireChat::maxGroupMembers()]);
+        return view('wirechat::livewire.chat.group.add-members', ['maxGroupMembers' => $this->panel()->getMaxGroupMembers()]);
     }
 }

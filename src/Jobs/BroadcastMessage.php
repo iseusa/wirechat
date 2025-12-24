@@ -1,20 +1,21 @@
 <?php
 
-namespace Namu\WireChat\Jobs;
+namespace Wirechat\Wirechat\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Namu\WireChat\Events\MessageCreated;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Models\Message;
-use Namu\WireChat\Models\Participant;
+use Wirechat\Wirechat\Events\MessageCreated;
+use Wirechat\Wirechat\Models\Message;
+use Wirechat\Wirechat\Models\Participant;
+use Wirechat\Wirechat\Traits\InteractsWithPanel;
 
 class BroadcastMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use InteractsWithPanel;
 
     /**
      * Create a new job instance.
@@ -25,10 +26,11 @@ class BroadcastMessage implements ShouldQueue
 
     protected $participantsTable;
 
-    public function __construct(public Message $message)
+    public function __construct(public Message $message, ?string $panel = null)
     {
+        $this->resolvePanel($panel);
         //
-        $this->onQueue(WireChat::messagesQueue());
+        $this->onQueue($this->getPanel()->getMessagesQueue());
         $this->auth = auth()->user();
 
         // Get table
@@ -42,6 +44,6 @@ class BroadcastMessage implements ShouldQueue
     public function handle(): void
     {
         // Broadcast to the conversation channel for all participants
-        event(new MessageCreated($this->message));
+        event(new MessageCreated($this->message, $this->getPanel()->getId()));
     }
 }

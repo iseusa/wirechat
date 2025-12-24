@@ -1,40 +1,66 @@
 <?php
 
-namespace Namu\WireChat\Services;
+namespace Wirechat\Wirechat\Services;
 
-use Illuminate\Support\Facades\Schema;
+use Wirechat\Wirechat\Exceptions\NoPanelProvidedException;
+use Wirechat\Wirechat\Panel;
+use Wirechat\Wirechat\PanelRegistry;
 
-class WireChatService
+class WirechatService
 {
+    protected PanelRegistry $registry;
+
+    public function __construct()
+    {
+        $this->registry = app(PanelRegistry::class);
+    }
+
+    /**
+     * Get a panel by ID or provider class, falling back to the default panel.
+     */
+    public function getPanel(?string $idOrClass = null): ?Panel
+    {
+
+        return $this->registry->get($idOrClass);
+
+    }
+
+    /**
+     * Get  panels
+     */
+    public function panels(): ?array
+    {
+        return $this->registry->all();
+
+    }
+
+    public function storage(): StorageService
+    {
+
+        return new StorageService;
+    }
+
+    public function currentPanel(): ?Panel
+    {
+        return $this->registry->getCurrent();
+    }
+
+    /**
+     * Get the default panel.
+     *
+     * @throws NoPanelProvidedException
+     */
+    public function getDefaultPanel(): ?Panel
+    {
+        return $this->registry->getDefault();
+    }
+
     /**
      * Get the color used to be used in as themse
      */
     public static function getColor(): string
     {
         return config('wirechat.color', '#3b82f6');
-    }
-
-    /**
-     * Retrieve the searchable fields defined in configuration
-     * and check if they exist in the database table schema.
-     *
-     * @return array|null The array of searchable fields or null if none found.
-     */
-    public function searchableFields(): ?array
-    {
-        // Define the fields specified as searchable in the configuration
-        $fieldsToCheck = config('wirechat.user_searchable_fields');
-
-        //  // Get the table name associated with the model
-        //  $tableName = $this->getTable();
-
-        //  // Get the list of columns in the database table
-        //  $tableColumns = Schema::getColumnListing($tableName);
-
-        //  // Filter the fields to include only those that exist in the table schema
-        //  $searchableFields = array_intersect($fieldsToCheck, $tableColumns);
-
-        return $fieldsToCheck ?: null;
     }
 
     /**
@@ -69,16 +95,6 @@ class WireChatService
     }
 
     /**
-     * Check if chat search is allowed.
-     *
-     * @return bool True if chat search is allowed, false otherwise.
-     */
-    public static function allowChatsSearch(): bool
-    {
-        return config('wirechat.allow_chats_search', false);
-    }
-
-    /**
      * Check if the new chat modal button can be shown.
      *
      * @return bool True if the new chat modal button can be shown, false otherwise.
@@ -99,23 +115,39 @@ class WireChatService
     }
 
     /**
-     * Get the wirechat storage disk from the configuration.
-     *
-     * @return string The storage disk.
-     */
-    public static function storageDisk(): string
-    {
-        return (string) config('wirechat.attachments.storage_disk', 'public');
-    }
-
-    /**
      * Get the wirechat storage folder from the configuration.
      *
      * @return string The storage folder.
+     *
+     * @deprecated Use Wirechat::storage()->directory() instead.
      */
     public static function storageFolder(): string
     {
-        return (string) config('wirechat.attachments.storage_folder', 'attachments');
+        return (new StorageService)->attachmentsDirectory();
+    }
+
+    /**
+     * Get the wirechat disk visibility from the configuration.
+     *
+     * @return string The disk visibility.
+     *
+     * @deprecated Use Wirechat::storage()->visibility() instead.
+     */
+    public static function diskVisibility(): string
+    {
+        return (new StorageService)->visibility();
+    }
+
+    /**
+     * Get the wirechat disk visibility from the configuration.
+     *
+     * @return string The disk visibility.
+     *
+     * @deprecated Use Wirechat::storage()->visibility() instead.
+     */
+    public static function storageDisk(): string
+    {
+        return (new StorageService)->disk();
     }
 
     /**
@@ -169,10 +201,30 @@ class WireChatService
     }
 
     /**
-     * Check if application preferes to use UUID instead of incremental primary ID for conversation table
+     * Determine if the application prefers to use UUIDs instead of
+     * auto-incrementing IDs for the conversations table.
+     *
+     * This method first checks the new configuration key:
+     * `wirechat.uses_uuid_for_conversations`.
+     *
+     * For backwards compatibility, it will fall back to the old key:
+     * `wirechat.uuids` if the new one is not set.
+     */
+    public static function usesUuidForConversations(): bool
+    {
+        return (bool) config('wirechat.uses_uuid_for_conversations',
+            config('wirechat.uuids', false) // legacy fallback
+        );
+    }
+
+    /**
+     * Legacy method: Check if the application prefers to use UUIDs
+     * for the conversations table.
+     *
+     * @deprecated since 0.4.0 Use {@see usesUuidForConversations()} instead.
      */
     public static function usesUuid(): bool
     {
-        return (bool) config('wirechat.uuids', false);
+        return static::usesUuidForConversations();
     }
 }

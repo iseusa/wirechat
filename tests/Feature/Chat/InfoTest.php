@@ -3,11 +3,10 @@
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Jobs\DeleteConversationJob;
-use Namu\WireChat\Livewire\Chat\Info;
-use Namu\WireChat\Livewire\Chats\Chats;
-use Namu\WireChat\Models\Conversation;
+use Wirechat\Wirechat\Jobs\DeleteConversationJob;
+use Wirechat\Wirechat\Livewire\Chat\Info;
+use Wirechat\Wirechat\Livewire\Chats\Chats;
+use Wirechat\Wirechat\Models\Conversation;
 use Workbench\App\Models\Admin;
 use Workbench\App\Models\User;
 
@@ -103,7 +102,7 @@ describe('Deleting Chat', function () {
         Livewire::actingAs($auth)->test(Info::class, ['conversation' => $conversation, 'widget' => false])
             ->call('deleteChat')
             ->assertStatus(200)
-            ->assertRedirect(route(WireChat::indexRouteName()))
+            ->assertRedirect(testPanelProvider()->chatsRoute())
             ->assertNotDispatched('close-chat')
             ->assertNotDispatched('chat-deleted');
 
@@ -185,7 +184,7 @@ describe('Deleting Chat', function () {
             ->assertStatus(200)
             ->assertNotDispatched('close-chat')
             ->assertNotDispatched('chat-deleted')
-            ->assertRedirect(route(WireChat::indexRouteName()));
+            ->assertRedirect(testPanelProvider()->chatsRoute());
     });
 
     test('when isWidget it dispatches "close-chat"  & "chat-deleted" events and Does NOT redirects to index route   after deleting Self conversation', function () {
@@ -199,7 +198,7 @@ describe('Deleting Chat', function () {
             ->assertStatus(200)
             ->assertDispatched('close-chat')
             ->assertDispatched('chat-deleted')
-            ->assertNoRedirect(route(WireChat::indexRouteName()));
+            ->assertNoRedirect();
     });
 
 });

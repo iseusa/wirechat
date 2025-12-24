@@ -1,6 +1,6 @@
 <?php
 
-namespace Namu\WireChat\Events;
+namespace Wirechat\Wirechat\Events;
 
 use Carbon\Carbon;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -10,20 +10,24 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Models\Message;
+use Wirechat\Wirechat\Models\Message;
+use Wirechat\Wirechat\Traits\InteractsWithPanel;
 
 class MessageCreated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithQueue,InteractsWithSockets, Queueable ,SerializesModels;
+    use InteractsWithPanel;
 
     public $message;
     // public $receiver;
 
-    public function __construct(Message $message)
+    public function __construct(Message $message, ?string $panel = null)
     {
-        $this->onQueue(WireChat::messagesQueue());
         $this->message = $message->load([]);
+
+        $this->resolvePanel($panel);
+
+        $this->onQueue($this->getPanel()->getMessagesQueue());
     }
 
     /**
@@ -33,9 +37,14 @@ class MessageCreated implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('conversation.'.$this->message->conversation_id),
-        ];
+        $channels = [];
+
+        $panelId = $this->getPanel()->getId();
+        $channels[] = "$panelId.conversation.{$this->message->conversation_id}";
+
+        return array_map(function ($channelName) {
+            return new PrivateChannel($channelName);
+        }, $channels);
     }
 
     public function broadcastWhen(): bool
@@ -51,7 +60,7 @@ class MessageCreated implements ShouldBroadcast
      */
     public function broadcastQueue(): string
     {
-        return WireChat::messagesQueue();
+        return $this->getPanel()->getMessagesQueue();
     }
 
     /**

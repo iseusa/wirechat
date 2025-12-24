@@ -1,6 +1,6 @@
 <?php
 
-namespace Namu\WireChat\Livewire\Chat;
+namespace Wirechat\Wirechat\Livewire\Chat;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -12,17 +12,18 @@ use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
-use Namu\WireChat\Enums\ConversationType;
-use Namu\WireChat\Enums\MessageType;
-use Namu\WireChat\Events\MessageCreated;
-use Namu\WireChat\Events\MessageDeleted;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Jobs\NotifyParticipants;
-use Namu\WireChat\Livewire\Chats\Chats;
-use Namu\WireChat\Livewire\Concerns\Widget;
-use Namu\WireChat\Models\Conversation;
-use Namu\WireChat\Models\Message;
-use Namu\WireChat\Models\Participant;
+use Wirechat\Wirechat\Enums\ConversationType;
+use Wirechat\Wirechat\Enums\MessageType;
+use Wirechat\Wirechat\Events\MessageCreated;
+use Wirechat\Wirechat\Events\MessageDeleted;
+use Wirechat\Wirechat\Facades\Wirechat;
+use Wirechat\Wirechat\Jobs\NotifyParticipants;
+use Wirechat\Wirechat\Livewire\Chats\Chats;
+use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
+use Wirechat\Wirechat\Livewire\Concerns\Widget;
+use Wirechat\Wirechat\Models\Conversation;
+use Wirechat\Wirechat\Models\Message;
+use Wirechat\Wirechat\Models\Participant;
 
 /**
  * Chat Component
@@ -33,6 +34,7 @@ use Namu\WireChat\Models\Participant;
  */
 class Chat extends Component
 {
+    use HasPanel;
     use Widget;
     use WithFileUploads;
     use WithPagination;
@@ -72,16 +74,28 @@ class Chat extends Component
 
     public function getListeners()
     {
-        // dd($this->conversation);
         $conversationId = $this->conversation?->id;
 
-        return [
-            'refresh' => '$refresh',
-            'echo-private:conversation.'.$conversationId.',.Namu\\WireChat\\Events\\MessageCreated' => 'appendNewMessage',
-            'echo-private:conversation.'.$conversationId.',.Namu\\WireChat\\Events\\MessageDeleted' => 'removeDeletedMessage',
+        if (! $conversationId) {
+            return [
+                'refresh' => '$refresh',
+            ];
+        }
 
-            //  'echo-private:conversation.' .$this->conversation->id. ',.Namu\\WireChat\\Events\\MessageDeleted' => 'removeDeletedMessage',
+        $listeners = [
+            'refresh' => '$refresh',
         ];
+
+        if ($this->panel() == null) {
+            \Illuminate\Support\Facades\Log::warning('Wirechat:No panels registered in Chat Component');
+        } else {
+            $panelId = $this->panel()->getId();
+            $channelName = "{$panelId}.conversation.{$conversationId}";
+            $listeners["echo-private:{$channelName},.Wirechat\\Wirechat\\Events\\MessageCreated"] = 'appendNewMessage';
+            $listeners["echo-private:{$channelName},.Wirechat\\Wirechat\\Events\\MessageDeleted"] = 'removeDeletedMessage';
+        }
+
+        return $listeners;
     }
 
     /**
@@ -235,7 +249,7 @@ class Chat extends Component
         $this->conversation->deleteFor($this->auth);
 
         $this->handleComponentTermination(
-            redirectRoute: route(WireChat::indexRouteName()),
+            redirectRoute: $this->panel()->chatsRoute(),
             events: [
                 'close-chat',
                 Chats::class => ['chat-deleted',  [$this->conversation->id]],
@@ -257,7 +271,7 @@ class Chat extends Component
         // Dispatach event instead if isWidget
 
         $this->handleComponentTermination(
-            redirectRoute: route(WireChat::indexRouteName()),
+            redirectRoute: $this->panel()->chatsRoute(),
             events: [
                 'close-chat',
                 Chats::class => 'refresh',
@@ -300,7 +314,7 @@ class Chat extends Component
             $this->dispatch('close-chat');
         } else {
             // redirect to chats page
-            $this->redirectRoute(WireChat::indexRouteName());
+            $this->redirect($this->panel()->chatsRoute());
         }
     }
 
@@ -331,7 +345,6 @@ class Chat extends Component
         // Combine media and files arrays
 
         $attachments = array_merge($this->media, $this->files);
-        //    dd(config('wirechat.file_mimes'));
 
         // If combined files array is empty, continue to validate body
         if (empty($attachments)) {
@@ -344,15 +357,17 @@ class Chat extends Component
 
             //  dd($attachments);
             // Retrieve maxUploads count
-            $maxUploads = config('wirechat.attachments.max_uploads');
+            $maxUploads = $this->panel()->getMaxUploads();
 
             // Files
-            $fileMimes = implode(',', config('wirechat.attachments.file_mimes'));
-            $fileMaxUploadSize = (int) config('wirechat.attachments.file_max_upload_size');
+            $fileMimes = implode(',', $this->panel()->getFileMimes());
+
+            $fileMaxUploadSize = (int) $this->panel()->getFileMaxUploadSize();
 
             // media
-            $mediaMimes = implode(',', config('wirechat.attachments.media_mimes'));
-            $mediaMaxUploadSize = (int) config('wirechat.attachments.media_max_upload_size');
+            $mediaMimes = implode(',', $this->panel()->getMediaMimes());
+
+            $mediaMaxUploadSize = (int) $this->panel()->getMediaMaxUploadSize();
 
             try {
 
@@ -385,8 +400,8 @@ class Chat extends Component
 
                 // save attachment to disk
                 $path = $attachment->store(
-                    WireChat::storageFolder(),
-                    WireChat::storageDisk()
+                    Wirechat::storage()->attachmentsDirectory(),
+                    Wirechat::storage()->disk()
                 );
 
                 // Determine the reply ID based on conditions
@@ -408,7 +423,7 @@ class Chat extends Component
                     'file_name' => basename($path),
                     'original_name' => $attachment->getClientOriginalName(),
                     'mime_type' => $attachment->getMimeType(),
-                    'url' => Storage::disk(WireChat::storageDisk())->url($path), // Use disk and path
+                    'url' => Storage::disk(Wirechat::storage()->disk())->url($path), // Use disk and path
                 ]);
 
                 // dd($attachment);
@@ -654,20 +669,20 @@ class Chat extends Component
         // we add try catch to avoid runtime error when broadcasting services are not connected
         // todo create a job to broadcast multiple messages
         try {
-
             // event(new BroadcastMessageEvent($message,$this->conversation));
 
             // !remove the receiver from the messageCreated and add it to the job instead
             // !also do not forget to exlude auth user or message owner from particpants
             // todo: maybe also broadcast for self conversation , incase user is using multiple devices
             // sleep(3);
-            broadcast(new MessageCreated($message))->toOthers();
+            broadcast(new MessageCreated($message, $this->panel()->getId()))->toOthers();
 
             // notify participants if conversation is NOT self
             $isSelf = $this->conversation->isSelf();
             /** @var bool $isSelf */
             if (! $isSelf) {
-                NotifyParticipants::dispatch($this->conversation, $message);
+
+                NotifyParticipants::dispatch($this->conversation, $message, $this->panel);
             }
         } catch (\Throwable $th) {
 
@@ -738,7 +753,7 @@ class Chat extends Component
         // Group the messages
         $this->loadedMessages = $messages
             ->groupBy(function ($message) {
-                /** @var \Namu\WireChat\Models\Message $message */
+                /** @var \Wirechat\Wirechat\Models\Message $message */
                 return $this->messageGroupKey($message);
             })
             ->map->values();  // Re-index each group
@@ -755,10 +770,6 @@ class Chat extends Component
 
     public function mount($conversation = null)
     {
-        // dd(config('wirechat.attachments.storage_disk'));
-
-        // dd(Storage::disk()->url('/'));
-
         $this->initializeConversation($conversation);
         $this->initializeParticipants();
         $this->finalizeConversationState();
@@ -821,7 +832,7 @@ class Chat extends Component
                 $this->receiverParticipant = $this->authParticipant;
             }
 
-            /** @var \Namu\WireChat\Models\Participant|null $participant */
+            /** @var \Wirechat\Wirechat\Models\Participant|null $participant */
             $participant = $this->receiverParticipant;
 
             $this->receiver = $participant

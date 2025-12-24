@@ -1,6 +1,6 @@
 <?php
 
-namespace Namu\WireChat\Http\Resources;
+namespace Wirechat\Wirechat\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * @mixin \Illuminate\Database\Eloquent\Model
  */
-class ChatableResource extends JsonResource
+class WirechatUserResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -20,8 +20,8 @@ class ChatableResource extends JsonResource
         return [
             'id' => $this->id,
             'type' => $this->getMorphClass(),
-            'display_name' => $this->display_name,
-            'cover_url' => $this->cover_url,
+            'wirechat_name' => $this->wirechat_name,
+            'wirechat_avatar_url' => $this->wirechat_avatar_url,
         ];
     }
 }

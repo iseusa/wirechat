@@ -1,26 +1,25 @@
 <?php
 
-namespace Namu\WireChat\Livewire\Chat\Group;
+namespace Wirechat\Wirechat\Livewire\Chat\Group;
 
-use App\Models\User;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Locked;
 // use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
-use Namu\WireChat\Enums\Actions;
-use Namu\WireChat\Enums\ParticipantRole;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Livewire\Chat\Info;
-use Namu\WireChat\Livewire\Concerns\ModalComponent;
-use Namu\WireChat\Livewire\Concerns\Widget;
-use Namu\WireChat\Livewire\Widgets\WireChat as WidgetsWireChat;
-use Namu\WireChat\Models\Action;
-use Namu\WireChat\Models\Conversation;
-use Namu\WireChat\Models\Participant;
+use Wirechat\Wirechat\Enums\Actions;
+use Wirechat\Wirechat\Enums\ParticipantRole;
+use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
+use Wirechat\Wirechat\Livewire\Concerns\ModalComponent;
+use Wirechat\Wirechat\Livewire\Concerns\Widget;
+use Wirechat\Wirechat\Livewire\Widgets\Wirechat as WidgetsWirechat;
+use Wirechat\Wirechat\Models\Action;
+use Wirechat\Wirechat\Models\Conversation;
+use Wirechat\Wirechat\Models\Participant;
 
 class Members extends ModalComponent
 {
+    use HasPanel;
     use Widget;
     use WithFileUploads;
     use WithPagination;
@@ -85,16 +84,16 @@ class Members extends ModalComponent
         $conversation = auth()->user()->createConversationWith($participant->participantable);
 
         $this->handleComponentTermination(
-            redirectRoute: route(WireChat::viewRouteName(), [$conversation->id]),
+            redirectRoute: $this->panel()->chatRoute($conversation->id),
             events: [
-                WidgetsWireChat::class => ['open-chat',  ['conversation' => $conversation->id]],
-                'closeWireChatModal',
+                WidgetsWirechat::class => ['open-chat',  ['conversation' => $conversation->id]],
+                'closeWirechatModal',
             ]
         );
 
         // $this->closeModalWithEvents([
-        //   //  WidgetsWireChat::class => ['close-chat'],
-        //     WidgetsWireChat::class => ['open-chat',  ['conversation' => $conversation->id]],
+        //   //  WidgetsWirechat::class => ['close-chat'],
+        //     WidgetsWirechat::class => ['open-chat',  ['conversation' => $conversation->id]],
         //    // 'closeChatDrawer',
         // ]);
         // $this->dispatch('closeChatDrawer');
@@ -144,9 +143,10 @@ class Members extends ModalComponent
 
     }
 
-    protected function loadParticipants()
+    protected function loadParticipants(): void
     {
-        $searchableFields = WireChat::searchableFields();
+
+        $searchableFields = $this->panel()->getSearchableAttributes();
         $columnCache = []; // Initialize cache for column checks
         // Check if $this->participants is initialized
         $this->participants = $this->participants ?? collect();
@@ -225,7 +225,7 @@ class Members extends ModalComponent
         // subtract one from total members and update chat list
         $this->totalMembersCount = $this->totalMembersCount - 1;
 
-        $this->dispatch('participantsCountUpdated', $this->totalMembersCount)->to(Info::class);
+        $this->dispatch('participantsCountUpdated', $this->totalMembersCount)->to(\Wirechat\Wirechat\Livewire\Chat\Group\Info::class);
         //  $this->dispatch('refresh')->self();
 
     }
@@ -247,6 +247,7 @@ class Members extends ModalComponent
 
     public function mount(Conversation $conversation)
     {
+        $this->initializePanel($this->panel);
         abort_unless(auth()->check(), 401);
 
         $this->conversation = $conversation->load('group')->loadCount('participants');
@@ -256,6 +257,7 @@ class Members extends ModalComponent
         abort_if($this->conversation->isPrivate(), 403, 'This is a private conversation');
 
         $this->participants = collect();
+
         $this->loadParticipants();
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-use Namu\WireChat\Tests\TestCase;
+use Wirechat\Wirechat\Tests\TestCase;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,8 +12,7 @@ use Namu\WireChat\Tests\TestCase;
 | need to change it using the "uses()" function to bind a different classes or traits.
 |
 */
-uses(TestCase::class)->in('Feature');
-uses(TestCase::class)->in('Unit');
+uses(TestCase::class)->in('Unit', 'Feature');
 /*
 |--------------------------------------------------------------------------
 | Expectations
@@ -43,4 +42,9 @@ expect()->extend('assertUsesTrait', function () {
 function something()
 {
     // ..
+}
+
+function testPanelProvider(): \Wirechat\Wirechat\Panel
+{
+    return \Wirechat\Wirechat\Facades\Wirechat::getPanel('test');
 }

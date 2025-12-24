@@ -2,10 +2,10 @@
 <div x-data dusk="new_group_modal">
 
     <div
-        class="relative w-full h-[410px] border  items-center justify-center border-[var(--wc-light-border)] dark:border-[var(--wc-dark-border)] overflow-auto bg-[var(--wc-light-primary)] dark:bg-[var(--wc-dark-primary)] dark:text-white sm:max-w-lg sm:rounded-lg">
+        class="relative w-full h-[410px] border overflow-hidden  items-center justify-center border-[var(--wc-light-border)] dark:border-[var(--wc-dark-border)] overflow-auto bg-[var(--wc-light-primary)] dark:bg-[var(--wc-dark-primary)] dark:text-white sm:max-w-lg sm:rounded-lg">
 
         {{--  Group Details --}}
-        <section x-show="$wire.showAddMembers==false" 
+        <section x-show="$wire.showAddMembers==false"
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0 -translate-x-full" x-transition:enter-end="opacity-100 translate-x-0"
             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-x-0"
@@ -44,7 +44,7 @@
                             <label for="name">@lang('wirechat::new.group.inputs.name.label')</label>
 
                             <input id='name' type="text" wire:model='name' autofocus placeholder="{{__('wirechat::new.group.inputs.name.placeholder') }}"
-                                class=" w-full border-0 px-0  bg-inherit dark:text-white outline-hidden w-full focus:outline-hidden  focus:ring-0 hover:ring-0">
+                                class="wc-input w-full border-0 px-0  bg-inherit dark:text-white outline-hidden w-full focus:outline-hidden  focus:ring-0 hover:ring-0">
 
                             <span class="text-red-500 text-sm ">
                                 @error('name')
@@ -71,7 +71,7 @@
                         <label class="my-2" for="description">@lang('wirechat::new.group.inputs.description.label')</label>
 
                         <textarea id='description' type="text" wire:model='description' placeholder="{{__('wirechat::new.group.inputs.description.placeholder')}}" rows="4"
-                            class=" w-full resize-none rounded-lg border-[var(--wc-light-border)]  dark:border-[var(--wc-dark-border)]   bg-inherit dark:text-white outline-hidden w-full focus:outline-hidden  focus:ring-0 hover:ring-0">
+                            class="wc-textarea w-full resize-none rounded-lg border-[var(--wc-light-border)]  dark:border-[var(--wc-dark-border)]   bg-inherit dark:text-white outline-hidden w-full focus:outline-hidden  focus:ring-0 hover:ring-0">
                         </textarea>
 
 
@@ -124,7 +124,7 @@
 
                     <h3 class="text-sm mx-auto font-semibold "><span>@lang('wirechat::new.group.labels.add_members')</span> {{count($selectedMembers)}} / {{$maxGroupMembers}}</h3>
 
-                    <button 
+                    <button
                         wire:click="create"
                         wire:loading.attr="disabled"
                         wire:target='create'
@@ -151,7 +151,7 @@
                 <section class="flex flex-wrap items-center px-0 border-b border-[var(--wc-light-secondary)] dark:border-[var(--wc-dark-secondary)]">
                     <input type="search" id="users-search-field" wire:model.live.debounce='search' autocomplete="off"
                         placeholder="{{__('wirechat::new.group.inputs.search.placeholder')}}"
-                        class=" w-full border-0 w-auto dark:bg-[var(--wc-dark-primary)] outline-hidden focus:outline-hidden bg-[var(--wc-light-primary)] bg-none rounded-lg focus:ring-0 hover:ring-0">
+                        class="wc-input w-full border-0 w-auto dark:bg-[var(--wc-dark-primary)] outline-hidden focus:outline-hidden bg-[var(--wc-light-primary)] bg-none rounded-lg focus:ring-0 hover:ring-0">
                 </section>
 
 
@@ -168,7 +168,7 @@
                             @foreach ($selectedMembers as $key => $member)
                                 <li class="flex items-center text-nowrap min-w-fit px-2 py-1 text-sm font-medium text-gray-800  bg-[var(--wc-light-secondary)] dark:bg-[var(--wc-dark-secondary)] rounded-sm  dark:text-gray-300"
                                     wire:key="selected-member-{{ $member->id }}">
-                                    {{ $member->display_name }}
+                                    {{ $member->wirechat_name }}
                                     <button type="button"
                                         wire:click="toggleMember('{{ $member->id }}',{{ json_encode(get_class($member)) }})"
                                         class="flex items-center p-1 ms-2 text-sm text-gray-400 bg-transparent rounded-xs hover:bg-[var(--wc-light-secondary)] dark:hover:bg-[var(--wc-dark-secondary)]  hover:text-gray-900  dark:hover:text-gray-300"
@@ -204,15 +204,15 @@
                                 <li class="flex cursor-pointer group gap-2 items-center p-2">
 
                                     <label
-                                        wire:click="toggleMember('{{ $user->id }}',{{ json_encode(get_class($user)) }})"
+                                        wire:click="toggleMember('{{ $user['id'] }}',{{ json_encode($user['type']) }})"
                                         class="flex cursor-pointer gap-2 items-center w-full">
-                                        <x-wirechat::avatar  src="{{ $user->cover_url }}" class="w-10 h-10" />
+                                        <x-wirechat::avatar  src="{{ $user['wirechat_avatar_url'] }}" class="w-10 h-10" />
 
                                         <p class="group-hover:underline transition-all truncate">
-                                            {{ $user->display_name }}</p>
+                                            {{ $user['wirechat_name'] }}</p>
 
                                         <div class="ml-auto">
-                                            @if ($selectedMembers->contains(fn($member) => $member->id == $user->id && get_class($member) == get_class($user)))
+                                            @if ($selectedMembers->contains(fn($member) => $member->id == $user['id'] && $member->getMorphClass() == $user['type']))
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                     fill="currentColor"
                                                     class="bi bi-plus-square-fill w-6 h-6 text-green-500"

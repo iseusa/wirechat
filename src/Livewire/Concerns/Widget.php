@@ -1,15 +1,14 @@
 <?php
 
-namespace Namu\WireChat\Livewire\Concerns;
+namespace Wirechat\Wirechat\Livewire\Concerns;
 
 use Livewire\Attributes\Locked;
-use Namu\WireChat\Facades\WireChat;
-use Namu\WireChat\Livewire\Chat\Chats;
+use Wirechat\Wirechat\Livewire\Chat\Chats;
 
 /**
  * Trait Actionable
  *
- * @property \Namu\WireChat\Models\Conversation|null $conversation
+ * @property \Wirechat\Wirechat\Models\Conversation|null $conversation
  */
 trait Widget
 {
@@ -38,7 +37,8 @@ trait Widget
 
         // set redirect route
         if ($redirectRoute == null) {
-            $redirectRoute = route(WireChat::indexRouteName());
+
+            $redirectRoute = route($this->panel()->chatsRoute());
         }
 
         // set events to dispatch on termination
