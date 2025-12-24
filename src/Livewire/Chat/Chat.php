@@ -24,6 +24,7 @@ use Wirechat\Wirechat\Livewire\Concerns\Widget;
 use Wirechat\Wirechat\Models\Conversation;
 use Wirechat\Wirechat\Models\Message;
 use Wirechat\Wirechat\Models\Participant;
+use Wirechat\Wirechat\Services\WirechatService;
 
 /**
  * Chat Component
@@ -142,7 +143,7 @@ class Chat extends Component
             // scroll to bottom
             $this->dispatch('scroll-bottom');
 
-            $newMessage = Message::find($event['message']['id']);
+            $newMessage = WirechatService::messageModelClass()::find($event['message']['id']);
             // dd($newMessage);
 
             // Make sure message does not belong to auth
@@ -185,7 +186,7 @@ class Chat extends Component
             throw $th;
         }
 
-        $message = Message::where('id', $messageId)->firstOrFail();
+        $message = WirechatService::messageModelClass()::where('id', $messageId)->firstOrFail();
 
         // check if user belongs to message
         abort_unless($this->auth->belongsToConversation($this->conversation), 403);
@@ -408,7 +409,7 @@ class Chat extends Component
                 $replyId = ($key === 0 && $this->replyMessage) ? $this->replyMessage->id : null;
 
                 // Create the message
-                $message = Message::create([
+                $message = WirechatService::messageModelClass()::create([
                     'reply_id' => $replyId,
                     'conversation_id' => $this->conversation->id,
                     'sendable_type' => $this->auth->getMorphClass(), // Polymorphic sender type
@@ -455,7 +456,7 @@ class Chat extends Component
 
         if ($this->body != null) {
 
-            $createdMessage = Message::create([
+            $createdMessage = WirechatService::messageModelClass()::create([
                 'reply_id' => $this->replyMessage?->id,
                 'conversation_id' => $this->conversation->id,
                 'sendable_type' => $this->auth->getMorphClass(), // Polymorphic sender type
@@ -510,7 +511,7 @@ class Chat extends Component
             throw $th;
         }
 
-        $message = Message::where('id', $messageId)->firstOrFail();
+        $message = WirechatService::messageModelClass()::where('id', $messageId)->firstOrFail();
 
         // make sure user is authenticated
         abort_unless(auth()->check(), 401);
@@ -548,7 +549,7 @@ class Chat extends Component
             throw $th;
         }
 
-        $message = Message::where('id', $messageId)->firstOrFail();
+        $message = WirechatService::messageModelClass()::where('id', $messageId)->firstOrFail();
         $authParticipant = $this->conversation->participant($this->auth);
 
         // make sure user is authenticated
@@ -699,7 +700,7 @@ class Chat extends Component
         // rate limit
         $this->rateLimit();
 
-        $message = Message::create([
+        $message = WirechatService::messageModelClass()::create([
             'conversation_id' => $this->conversation->id,
             'sendable_type' => $this->auth->getMorphClass(), // Polymorphic sender type
             'sendable_id' => auth()->id(), // Polymorphic sender ID
@@ -786,7 +787,7 @@ class Chat extends Component
         } elseif (is_numeric($conversation) || is_string($conversation)) {
             // Cast to integer if numeric (handles numeric strings too)
             $conversationId = $conversation;
-            $this->conversation = Conversation::find($conversationId);
+            $this->conversation = WirechatService::conversationModelClass()::find($conversationId);
 
             if (! $this->conversation) {
                 abort(404, __('wirechat::chat.messages.conversation_not_found')); // Custom error response
@@ -797,7 +798,7 @@ class Chat extends Component
             return abort(422, __('wirechat::chat.messages.invalid_conversation_input')); // Handle invalid input types
         }
 
-        // $this->conversation = Conversation::where('id', $conversation)->firstOr(fn () => abort(404));
+        // $this->conversation = WirechatService::conversationModelClass()::where('id', $conversation)->firstOr(fn () => abort(404));
         $this->totalMessageCount = Message::where('conversation_id', $this->conversation->id)->count();
         abort_unless($this->auth->belongsToConversation($this->conversation), 403);
     }
@@ -840,7 +841,7 @@ class Chat extends Component
                 : null;
 
         } else {
-            $this->authParticipant = Participant::where('conversation_id', $this->conversation->id)->whereParticipantable($this->auth)->first();
+            $this->authParticipant = WirechatService::participantModelClass()::where('conversation_id', $this->conversation->id)->whereParticipantable($this->auth)->first();
             $this->receiver = null;
         }
     }

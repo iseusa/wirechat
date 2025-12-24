@@ -158,8 +158,6 @@ class Info extends ModalComponent
             $this->reset('photo');
 
             $this->dispatch('refresh')->to('wirechat.chats');
-            $this->dispatch('refresh')->to(Chat::class);
-
         }
 
     }
