@@ -96,9 +96,6 @@ class WirechatServiceProvider extends ServiceProvider
         // load assets
         $this->loadAssets();
 
-        // load loadScripts
-        $this->loadScripts();
-
         // load styles
         $this->loadStyles();
 
@@ -337,10 +334,5 @@ class WirechatServiceProvider extends ServiceProvider
                 </style>
             EOT; ?>";
         });
-    }
-
-    protected function loadScripts(): void
-    {
-        Blade::directive('wirechatScripts', fn () => '');
     }
 }
