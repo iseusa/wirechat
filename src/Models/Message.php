@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 use Wirechat\Wirechat\Enums\Actions;
 use Wirechat\Wirechat\Enums\MessageType;
 use Wirechat\Wirechat\Facades\Wirechat;
@@ -26,8 +27,8 @@ use Wirechat\Wirechat\Traits\Actionable;
  * @property string $sendable_type
  * @property int|null $reply_id
  * @property string|null $body
- * @property string|null $sanitized_short_body
- * @property string|null $sanitized_body
+ * @property HtmlString|string|null $sanitized_short_body
+ * @property HtmlString|string|null $sanitized_body
  * @property MessageType $type
  * @property \Illuminate\Support\Carbon|null $kept_at filled when a message is kept from disappearing
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -315,7 +316,7 @@ class Message extends Model
      * Returns the sanitized short body attribute.
      * This method can be overridden in child classes to customize HTML sanitization short version.
      */
-    public function getSanitizedShortBodyAttribute(): ?string
+    public function getSanitizedShortBodyAttribute(): HtmlString|string|null
     {
         return $this->body;
     }
@@ -324,7 +325,7 @@ class Message extends Model
      * Returns the sanitized body attribute.
      * This method can be overridden in child classes to customize HTML sanitization.
      */
-    public function getSanitizedBodyAttribute(): ?string
+    public function getSanitizedBodyAttribute(): HtmlString|string|null
     {
         return $this->body;
     }
