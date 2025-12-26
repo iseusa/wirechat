@@ -5,7 +5,6 @@ namespace Wirechat\Wirechat\Livewire\Pages;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
-use Wirechat\Wirechat\Models\Conversation;
 use Wirechat\Wirechat\Services\WirechatService;
 
 class Chat extends Component
