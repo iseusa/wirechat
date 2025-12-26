@@ -26,6 +26,7 @@ use Wirechat\Wirechat\Traits\Actionable;
  * @property string $sendable_type
  * @property int|null $reply_id
  * @property string|null $body
+ * @property string|null $sanitized_short_body
  * @property string|null $sanitized_body
  * @property MessageType $type
  * @property \Illuminate\Support\Carbon|null $kept_at filled when a message is kept from disappearing
@@ -308,6 +309,15 @@ class Message extends Model
 
         // Use the isEmoji helper method to check if the message body contains only emojis
         return Helper::isEmoji($this->body);
+    }
+
+    /**
+     * Returns the sanitized short body attribute.
+     * This method can be overridden in child classes to customize HTML sanitization short version.
+     */
+    public function getSanitizedShortBodyAttribute(): ?string
+    {
+        return $this->body;
     }
 
     /**
