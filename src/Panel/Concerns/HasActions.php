@@ -14,7 +14,7 @@ trait HasActions
 
     protected bool|Closure $showRightActions = true;
 
-    protected bool|Closure $isEnabledShiftEnter = true;
+    protected bool|Closure $enabledShiftEnter = true;
 
     public function redirectToHomeAction(bool|Closure $condition = true): static
     {
@@ -28,23 +28,51 @@ trait HasActions
         return (bool) $this->evaluate($this->redirectToHomeAction);
     }
 
-    public function showLeftActions(): bool
+    public function showLeftActions(bool|Closure $condition = true): static
     {
-        return $this->evaluate($this->showLeftActions);
+        $this->showLeftActions = $condition;
+
+        return $this;
     }
 
-    public function showTextArea(): bool
+    public function isShowLeftActions(): bool
     {
-        return $this->evaluate($this->showTextArea);
+        return (bool) $this->evaluate($this->showLeftActions);
     }
 
-    public function showRightActions(): bool
+    public function showTextArea(bool|Closure $condition = true): static
     {
-        return $this->evaluate($this->showRightActions);
+        $this->showTextArea = $condition;
+
+        return $this;
+    }
+
+    public function isShowTextArea(): bool
+    {
+        return (bool) $this->evaluate($this->showTextArea);
+    }
+
+    public function showRightActions(bool|Closure $condition = true): static
+    {
+        $this->showRightActions = $condition;
+
+        return $this;
+    }
+
+    public function isShowRightActions(): bool
+    {
+        return (bool) $this->evaluate($this->showRightActions);
+    }
+
+    public function enableShiftEnter(bool|Closure $condition = true): static
+    {
+        $this->enabledShiftEnter = $condition;
+
+        return $this;
     }
 
     public function isEnabledShiftEnter(): bool
     {
-        return $this->evaluate($this->isEnabledShiftEnter);
+        return (bool) $this->evaluate($this->enabledShiftEnter);
     }
 }

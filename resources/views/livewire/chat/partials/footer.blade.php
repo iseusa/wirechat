@@ -321,21 +321,21 @@
                     {{-- ------------------ --}}
                     {{-- Left Actions Input --}}
                     {{-- ------------------ --}}
-                    @if($this->panel()->showLeftActions())
+                    @if($this->panel()->isShowLeftActions())
                     @include('wirechat::livewire.chat.partials.left-actions-input')
                     @endif
 
                     {{-- -------------- --}}
                     {{-- TextArea Input --}}
                     {{-- -------------- --}}
-                    @if($this->panel()->showTextArea())
+                    @if($this->panel()->isShowTextArea())
                     @include('wirechat::livewire.chat.partials.textarea-input')
                     @endif
 
                     {{-- ------------------- --}}
                     {{-- Right Actions Input --}}
                     {{-- ------------------- --}}
-                    @if($this->panel()->showRightActions())
+                    @if($this->panel()->isShowRightActions())
                     @include('wirechat::livewire.chat.partials.right-actions-input')
                     @endif
                 </form>
