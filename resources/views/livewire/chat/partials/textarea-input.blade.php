@@ -3,7 +3,7 @@
               wire:loading.delay.longest.attr="disabled" wire:target="sendMessage" id="chat-input-field" autofocus
               type="text" name="message" placeholder="{{ __('wirechat::chat.inputs.message.placeholder') }}" maxlength="1700" rows="1"
               @input="$el.style.height = 'auto'; $el.style.height = $el.scrollHeight + 'px';"
-              @if (config('wirechat.enabled_shift_enter',  true))
+              @if ($this->panel()->isEnabledShiftEnter())
               @keydown.shift.enter.prevent="insertNewLine($el)" {{-- @keydown.enter.prevent prevents the
            default behavior of Enter key press only if Shift is not held down. --}} @keydown.enter.prevent=""
               @keyup.enter.prevent="$event.shiftKey ? null : (((body && body?.trim().length > 0) || ($wire.media && $wire.media.length > 0)) ? $wire.sendMessage() : null)"

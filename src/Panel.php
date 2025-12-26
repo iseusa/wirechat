@@ -77,19 +77,4 @@ class Panel
     {
         // WirechatColor::register($this->getColors());
     }
-
-    public function showLeftActions(): bool
-    {
-        return true;
-    }
-
-    public function showTextArea(): bool
-    {
-        return true;
-    }
-
-    public function showRightActions(): bool
-    {
-        return true;
-    }
 }
