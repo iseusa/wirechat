@@ -131,9 +131,9 @@
                     setShowPropertyTo(show) {
                         this.show = show;
                         if (show) {
-                            document.body.classList.add('overflow-y-hidden');
+                            // document.body.classList.add('overflow-y-hidden');
                         } else {
-                            document.body.classList.remove('overflow-y-hidden');
+                            // document.body.classList.remove('overflow-y-hidden');
 
                             setTimeout(() => {
                                 this.activeWidgetComponent = false;
