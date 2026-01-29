@@ -81,7 +81,7 @@ class NotifyParticipants implements ShouldQueue
          * Fetch participants, ordered by `last_active_at` in descending order,
          * so that the most recently active participants are notified first. */
         WirechatService::participantModelClass()::where('conversation_id', $this->conversation->id)
-            ->withoutParticipantable($this->auth)
+            ->withoutParticipantable($this->auth->getParticipantable())
             ->latest('last_active_at') // Prioritize active participants
             ->chunk(50, function ($participants) {
                 foreach ($participants as $key => $participant) {
