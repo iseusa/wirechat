@@ -32,30 +32,6 @@ trait InteractsWithWirechat
     use InteractsWithPanel;
 
     /**
-     * Get the model that should be used as the participantable when creating Participants.
-     *
-     * By default returns $this, but can be overridden to return a different model.
-     * This allows flexibility when the participant in a conversation should be
-     * a different entity than the authenticated user (e.g. a team, company, etc.).
-     */
-    public function getParticipantable(): Model
-    {
-        return $this;
-    }
-
-    /**
-     * Get the model that should be used as the sendable when creating Messages.
-     *
-     * By default returns $this, but can be overridden to return a different model.
-     * This allows flexibility when the message sender should be
-     * a different entity than the authenticated user (e.g. a bot, system, etc.).
-     */
-    public function getSendable(): Model
-    {
-        return $this;
-    }
-
-    /**
      * Establishes a relationship between the user and conversations.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
@@ -84,15 +60,11 @@ trait InteractsWithWirechat
         // abort if is not allowed to create new chats
         abort_unless($this->canCreateChats(), 403, 'You do not have permission to create chats.');
 
-        // Resolve the participantable and sendable models
-        $authParticipantable = $this->getParticipantable();
-        $otherParticipantable = $participant->getParticipantable();
+        $participantId = $participant->id;
+        $participantType = $participant->getMorphClass();
 
-        $participantId = $otherParticipantable->getKey();
-        $participantType = $otherParticipantable->getMorphClass();
-
-        $authenticatedUserId = $authParticipantable->getKey();
-        $authenticatedUserType = $authParticipantable->getMorphClass();
+        $authenticatedUserId = $this->id;
+        $authenticatedUserType = $this->getMorphClass();
 
         // Determine if this is a self-conversation (for the same user as both participants)
         $selfConversationCheck = $participantId == $authenticatedUserId && $participantType == $authenticatedUserType;
@@ -153,8 +125,8 @@ trait InteractsWithWirechat
         // Create an initial message if provided
         if (! empty($message)) {
             WirechatService::messageModelClass()::create([
-                'sendable_id' => $this->getSendable()->getKey(),
-                'sendable_type' => $this->getSendable()->getMorphClass(),
+                'sendable_id' => $authenticatedUserId,
+                'sendable_type' => $authenticatedUserType,
                 'conversation_id' => $existingConversation->id,
                 'body' => $message,
             ]);
@@ -205,8 +177,8 @@ trait InteractsWithWirechat
         // create participant as owner
         WirechatService::participantModelClass()::create([
             'conversation_id' => $conversation->id,
-            'participantable_id' => $this->getParticipantable()->getKey(),
-            'participantable_type' => $this->getParticipantable()->getMorphClass(),
+            'participantable_id' => $this->id,
+            'participantable_type' => $this->getMorphClass(),
             'role' => ParticipantRole::OWNER,
         ]);
 
@@ -271,8 +243,8 @@ trait InteractsWithWirechat
 
             $createdMessage = WirechatService::messageModelClass()::create([
                 'conversation_id' => $conversation->id,
-                'sendable_type' => $this->getSendable()->getMorphClass(), // Polymorphic sender type
-                'sendable_id' => $this->getSendable()->getKey(), // Polymorphic sender ID
+                'sendable_type' => $this->getMorphClass(), // Polymorphic sender type
+                'sendable_id' => $this->id, // Polymorphic sender ID
                 'body' => $message,
             ]);
 
@@ -374,8 +346,6 @@ trait InteractsWithWirechat
      */
     public function belongsToConversation(Conversation $conversation, bool $withoutGlobalScopes = false): bool
     {
-        $participantable = $this->getParticipantable();
-
         // Check if participants are already loaded
         if ($conversation->relationLoaded('participants')) {
             // If loaded, simply check the existing collection
@@ -385,9 +355,9 @@ trait InteractsWithWirechat
                 $participants->withoutGlobalScopes();
             }
 
-            return $participants->contains(function ($participant) use ($participantable) {
-                return $participant->participantable_id == $participantable->getKey() &&
-                    $participant->participantable_type == $participantable->getMorphClass();
+            return $participants->contains(function ($participant) {
+                return $participant->participantable_id == $this->getKey() &&
+                    $participant->participantable_type == $this->getMorphClass();
             });
         }
 
@@ -399,8 +369,8 @@ trait InteractsWithWirechat
 
         // If not loaded, perform the query
         return $participants
-            ->where('participantable_id', $participantable->getKey())
-            ->where('participantable_type', $participantable->getMorphClass())
+            ->where('participantable_id', $this->getKey())
+            ->where('participantable_type', $this->getMorphClass())
             ->exists();
     }
 
@@ -429,14 +399,12 @@ trait InteractsWithWirechat
      */
     public function hasConversationWith(Model $user): bool
     {
-        $otherParticipantable = $user->getParticipantable();
-        $authParticipantable = $this->getParticipantable();
 
-        $participantId = $otherParticipantable->getKey();
-        $participantType = $otherParticipantable->getMorphClass();
+        $participantId = $user->getKey();
+        $participantType = $user->getMorphClass();
 
-        $authenticatedUserId = $authParticipantable->getKey();
-        $authenticatedUserType = $authParticipantable->getMorphClass();
+        $authenticatedUserId = $this->id;
+        $authenticatedUserType = $this->getMorphClass();
 
         // Check if this is a self-conversation (both participants are the authenticated user)
         $selfConversationCheck = $participantId === $authenticatedUserId && $participantType === $authenticatedUserType;

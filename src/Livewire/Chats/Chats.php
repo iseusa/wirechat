@@ -7,17 +7,17 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Wirechat\Wirechat\Facades\Wirechat;
 use Wirechat\Wirechat\Helpers\MorphClassResolver;
 use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
 use Wirechat\Wirechat\Livewire\Concerns\Widget;
-use Wirechat\Wirechat\Models\Conversation;
 
 /**
  * Chats Component
  *
  * Handles chat conversations, search, and real-time updates.
  *
- * @property \Illuminate\Contracts\Auth\Authenticatable|null $auth
+ * @property \Illuminate\Database\Eloquent\Model|\Illuminate\Contracts\Auth\Authenticatable|null $sendable
  */
 class Chats extends Component
 {
@@ -78,9 +78,8 @@ class Chats extends Component
      */
     public function getListeners()
     {
-        $user = $this->auth;
-        $encodedType = MorphClassResolver::encode($user?->getMorphClass());
-        $userId = $user?->getKey();
+        $encodedType = MorphClassResolver::encode($this->sendable?->getMorphClass());
+        $userId = $this->sendable?->getKey();
 
         $listeners = [
             'refresh' => '$refresh',
@@ -193,7 +192,7 @@ class Chats extends Component
 
     protected function conversationsQuery($perPage, $offset)
     {
-        return $this->auth->conversations()
+        return $this->sendable->conversations()
             ->with([
                 'lastMessage.sendable',
                 'group.cover' => fn ($query) => $query->select('id', 'url', 'attachable_type', 'attachable_id', 'file_path'),
@@ -229,8 +228,8 @@ class Chats extends Component
                 $conversation->setRelation('participants', $participants);
 
                 // Set peer and auth participants
-                $conversation->auth_participant = $conversation->participant($this->auth);
-                $conversation->peer_participant = $conversation->peerParticipant($this->auth);
+                $conversation->auth_participant = $conversation->participant($this->sendable);
+                $conversation->peer_participant = $conversation->peerParticipant($this->sendable);
             }
         });
 
@@ -258,8 +257,8 @@ class Chats extends Component
                 $conversation->setRelation('participants', $participants);
 
                 // Set peer and auth participants
-                $conversation->auth_participant = $conversation->participant($this->auth);
-                $conversation->peer_participant = $conversation->peerParticipant(reference: $this->auth);
+                $conversation->auth_participant = $conversation->participant($this->sendable);
+                $conversation->peer_participant = $conversation->peerParticipant(reference: $this->sendable);
             }
 
             return $conversation->loadMissing([
@@ -272,12 +271,12 @@ class Chats extends Component
     /**
      * Returns the authenticated user.
      *
-     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Contracts\Auth\Authenticatable|null
      */
     #[Computed(persist: true)]
-    public function auth()
+    public function sendable()
     {
-        return auth()->user();
+        return Wirechat::getSendable();
     }
 
     /**
