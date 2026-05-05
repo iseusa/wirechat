@@ -139,7 +139,9 @@ $chatShellStyles = trim(implode(' ', array_filter([
         {{-- ---------- --}}
         {{-- -Footer--- --}}
         {{-- ---------- --}}
+        @if ($this->canSendMessage())
         @include('wirechat::livewire.chat.partials.footer', [ 'conversation' => $conversation, 'authParticipant' => $authParticipant, 'media' => $media, 'files' => $files, 'replyMessage' => $replyMessage])
+        @endif
 
     </div>
     {{-- Widget mode keeps a single shared drawer in the widget shell so chat refreshes do not tear it down. --}}
