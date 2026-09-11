@@ -215,14 +215,25 @@ class Chat extends Component
      * livewire method
      ** This is avoid replacing temporary files on add more files
      * We override the function in WithFileUploads Trait
-     * todo:uncomment if used this in fronend
+     *
+     * Since Livewire 3.8.6 the client hands back `token:filename` references
+     * (see TemporaryUploadedFile::signPath), so the token has to be verified
+     * and stripped before the filename is used against the temporary disk.
      */
-    public function _finishUpload($name, $tmpPath, $isMultiple)
+    public function _finishUpload($name, $tmpPath, $isMultiple, $append = false)
     {
         $this->cleanupOldUploads();
 
-        $files = collect($tmpPath)->map(function ($i) {
-            return TemporaryUploadedFile::createFromLivewire($i);
+        $files = collect($tmpPath)->map(function ($signedPath) {
+            $path = method_exists(TemporaryUploadedFile::class, 'extractPathFromSignedPath')
+                ? TemporaryUploadedFile::extractPathFromSignedPath($signedPath)
+                : $signedPath;
+
+            if ($path === false) {
+                abort(403, 'Invalid upload reference.');
+            }
+
+            return TemporaryUploadedFile::createFromLivewire($path);
         })->toArray();
         $this->dispatch('upload:finished', name: $name, tmpFilenames: collect($files)->map->getFilename()->toArray())->self();
 
